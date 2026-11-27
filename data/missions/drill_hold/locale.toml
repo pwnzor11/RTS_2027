@@ -1,0 +1,10 @@
+# Drill: Hold the line text by key.
+"dh.obj.hold" = "Hold the gate through three waves"
+"dh.start" = "Three waves are coming through the east gate. Hold it."
+"dh.wave1" = "Wave 1."
+"dh.wave2" = "Wave 2."
+"dh.wave3" = "Last wave."
+"dh.lost" = "Your force is gone."
+"dh.done" = "Line held."
+
+[voice]

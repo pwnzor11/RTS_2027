@@ -53,7 +53,7 @@ public sealed class S46KeyChordTests
         Assert.Empty(KeyBindings.Default.Conflicts());
         foreach (ActionInfo info in GameKeys.Infos)
         {
-            Assert.Equal(KeyChord.Of(info.Default), KeyBindings.Default.GetChord(info.Action));
+            Assert.Equal(new KeyChord(info.Default, info.DefaultAlt), KeyBindings.Default.GetChord(info.Action));   // S47: Alt+Enter full screen is the one chord default
             Assert.True(KeyBindings.Default.GetAltChord(info.Action).IsNone);
         }
     }

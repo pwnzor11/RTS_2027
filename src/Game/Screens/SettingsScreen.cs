@@ -73,6 +73,7 @@ public sealed class SettingsScreen : IScreen
             new MenuItem(() => $"Additive glow: {(_s.Settings.AdditiveGlow ? "On" : "Off")}", ToggleAdditiveGlow, _ => ToggleAdditiveGlow(),
                 new MenuButton("Toggle", ToggleAdditiveGlow)),   // S45 V-04
             new MenuItem(() => "Alerts", () => _s.Screens.Push(new AlertsSettingsScreen(_s, _path))),   // QOL-12
+            new MenuItem(() => "Play options", () => _s.Screens.Push(new PlaySettingsScreen(_s, _path))),   // S47 U-13
             new MenuItem(() => $"Order lines: {(_s.Settings.ShowOrderLines ? "On" : "Off")}", ToggleOrderLines, _ => ToggleOrderLines(),
                 new MenuButton("Toggle", ToggleOrderLines)),   // QOL-10
             new MenuItem(() => SkinLine(_s.Settings), ToggleUiSkin, _ => ToggleUiSkin(),

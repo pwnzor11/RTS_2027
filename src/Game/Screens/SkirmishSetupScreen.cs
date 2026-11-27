@@ -303,6 +303,9 @@ public sealed class SkirmishSetupScreen : IScreen
             { WidthTexts = WidestOptionsTexts() });
         }
 
+        // S47 cnc#49: one button picks a random faction for every open slot (the Fac buttons still step one by one).
+        rows.Add(new(() => "Random factions", RollFactions, _ => RollFactions(), new MenuButton("Roll", RollFactions)));
+
         // QOL-07 (D-313): opt-in match rules; the defaults (unlimited, fog of war) are the usual game.
         rows.Add(new(() => MatchRules.LimitLabel(_rules.SuperweaponLimit), null, d => _rules = _rules.StepSuperweapons(d),
             new MenuButton("<", () => _rules = _rules.StepSuperweapons(-1)), new MenuButton(">", () => _rules = _rules.StepSuperweapons(1)))
@@ -587,6 +590,25 @@ public sealed class SkirmishSetupScreen : IScreen
             _slots[i] = _slots[i] with { Colour = c };
             return;
         }
+    }
+
+    private void RollFactions()
+    {
+        IReadOnlyList<SkirmishSlot> rolled = RandomFactions(_slots, n => Random.Shared.Next(n));   // front-end choice: the UI random source is fine here
+        for (int i = 0; i < _slots.Count; i++) _slots[i] = rolled[i];
+    }
+
+    /// <summary>
+    /// S47 cnc#49: the slots with a random playable faction in every slot that is not closed. <paramref name="next"/> returns a number in
+    /// [0, n) (<c>Random.Shared.Next</c> in play, a fixed one in tests).
+    /// </summary>
+    public static IReadOnlyList<SkirmishSlot> RandomFactions(IReadOnlyList<SkirmishSlot> slots, Func<int, int> next)
+    {
+        IReadOnlyList<Faction> order = RuleCounts.PlayableOrder;
+        var result = new List<SkirmishSlot>(slots.Count);
+        foreach (SkirmishSlot slot in slots)
+            result.Add(slot.Kind == SlotKind.Closed || order.Count == 0 ? slot : slot with { Faction = order[Math.Clamp(next(order.Count), 0, order.Count - 1)] });
+        return result;
     }
 
     /// <summary>The faction after <paramref name="faction"/> in the pick list, wrapping round (Authority, Directorate, Left Behind; Neutral is

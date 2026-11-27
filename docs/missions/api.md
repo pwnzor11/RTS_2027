@@ -178,6 +178,17 @@ Use it for income checks: `Player.Cash` alone misses credits that sit in storage
 (a lone Refinery holds 1000, so one delivery can raise Funds by at most that), and spending lowers Funds, so track a low-water mark rather than a fixed baseline
 (see data/missions/tut_01).
 
+### Player.KeepAlive (S47, C-06)
+| Function | Arguments | Returns | Checks | Status |
+|---|---|---|---|---|
+| `Player.KeepAlive(player, on)` | slot, boolean | nil | player valid, `on` must be true or false (script error otherwise); sim state (hashed and saved) | implemented (S47) |
+| `Player.IsKeptAlive(player)` | slot | boolean | player valid | implemented (S47) |
+
+While `on` is true the player is never marked defeated by the "no buildings" rule or the skirmish no-rebuild rule, so a mission can keep an enemy team
+"alive" without a hidden reserve building. `Mission.Win` / `Mission.Lose` still work. Turning it off defeats a player with no assets on the next cleanup.
+Example: `Player.KeepAlive(1, true)  -- team 1 stays in the game after its last building falls`.
+Save format: `SimWriter.SaveVersion` unchanged; the "players" part writes the flag in bit 1 of each player's Defeated byte (old bytes when never set).
+
 **Game over and script wins.** The sim's tick order is combat, ..., triggers (`RunTriggers`, where the host runs script callbacks), then cleanup
 (`RunCleanup`), which removes dead actors and marks players defeated; `GameOver` is computed from that. So on the tick the last enemy dies the
 script's callbacks run first, `Mission.Win` on that tick makes the outcome Won, and the game screen (which checks `GameOver` after the step) never

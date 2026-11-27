@@ -22,10 +22,21 @@ public sealed class RandomCommanderSource : IDirectiveSource
     /// <summary>The stream of <see cref="SimRandom"/> this source draws from (separate from the match's own streams).</summary>
     private const ulong Stream = 0x5A24UL;
 
+    /// <summary>S47 (M16-A-08): the stream the counter-hold draws come from; separate from <see cref="Stream"/> so the main random stream
+    /// (and every seed's existing game) is the same with <see cref="Counters"/> on or off.</summary>
+    private const ulong CounterStream = 0x5A47UL;
+
     private const int MaxOrderAmount = 3000;
     private const int MaxMinute = 10;
 
+    /// <summary>S47 (M16-A-08): the "random directive" control for counter-building: a decision with a counter mix gets a random hold of
+    /// 1..10 minutes (a quarter of them do not), through the same <see cref="CounterHold"/> the model's commander uses. Off by default.</summary>
+    public bool Counters { get; init; }
+
     private readonly SimRandom _rng;
+    private readonly SimRandom _counterRng;
+    private readonly CounterHold _counter = new();
+    private DirectiveDraft? _lastSent;
     private readonly int _mapCells;
     private readonly List<OrderDraft> _orders = new();
     private int _nextTick = Commander.CadenceTicks;
@@ -36,6 +47,7 @@ public sealed class RandomCommanderSource : IDirectiveSource
     {
         if (mapCells < 1) throw new ArgumentOutOfRangeException(nameof(mapCells));
         _rng = new SimRandom(seed, Stream);
+        _counterRng = new SimRandom(seed, CounterStream);
         _mapCells = mapCells;
     }
 
@@ -44,13 +56,29 @@ public sealed class RandomCommanderSource : IDirectiveSource
     {
         packedArg = 0;
         focusCell = Directive.NoCell;
-        if (view.Tick < _nextTick) return false;
+        if (view.Tick < _nextTick)
+        {
+            if (Counters && _counter.Expire(_lastSent, view.Tick) is { } back) return Send(back, out packedArg, out focusCell);   // S47: the hold ended
+            return false;
+        }
         _nextTick = view.Tick + Commander.CadenceTicks;
 
         CommanderReply reply = Next();
         _decision = reply;
         _orders.AddRange(reply.OrderList);
         DirectiveDraft d = reply.Directive!.Value;
+        if (Counters)
+        {
+            int roll = _counterRng.Next(4), minutes = 1 + _counterRng.Next(ReplyParser.MaxCounterMinutes);   // always drawn: the stream does not depend on the mix
+            if (CounterHold.IsCounter(d.Mix) && roll != 0) d = d with { CounterMinutes = (byte)minutes };
+            d = _counter.Apply(d, view.Tick);
+        }
+        return Send(d, out packedArg, out focusCell);
+    }
+
+    private bool Send(DirectiveDraft d, out int packedArg, out CellCoord focusCell)
+    {
+        _lastSent = d;
         packedArg = DirectiveCodec.PackStrong(DirectiveCodec.Pack(d.Posture, d.Focus, d.TargetPlayer, d.Mix, d.Expand), d.StrongMix);
         focusCell = d.FocusX < 0 || d.FocusY < 0 ? Directive.NoCell : new CellCoord(d.FocusX, d.FocusY);
         return true;

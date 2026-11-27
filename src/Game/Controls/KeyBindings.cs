@@ -59,7 +59,7 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     public bool Uses(GameAction action, KeyChord chord) => !chord.IsNone && (_keys[(int)action] == chord || _alt[(int)action] == chord);
 
     /// <summary>True when <paramref name="action"/> still has its factory key.</summary>
-    public bool IsDefault(GameAction action) => _keys[(int)action] == KeyChord.Of(GameKeys.InfoOf(action).Default);
+    public bool IsDefault(GameAction action) => _keys[(int)action] == GameKeys.InfoOf(action).DefaultChord;
 
     /// <summary>True when every action has its factory key.</summary>
     public bool IsAllDefault => this.Equals(Default);
@@ -203,7 +203,7 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
         {
             foreach ((GameAction a, GameAction b) in clashes)
             {
-                result = result.With(a, GameKeys.InfoOf(a).Default).With(b, GameKeys.InfoOf(b).Default).WithAlt(a, KeyChord.None).WithAlt(b, KeyChord.None);
+                result = result.With(a, GameKeys.InfoOf(a).DefaultChord).With(b, GameKeys.InfoOf(b).DefaultChord).WithAlt(a, KeyChord.None).WithAlt(b, KeyChord.None);
             }
         }
 
@@ -230,7 +230,7 @@ public sealed class KeyBindings : IEquatable<KeyBindings>
     private static KeyChord[] DefaultKeys()
     {
         var keys = new KeyChord[Enum.GetValues<GameAction>().Length];
-        foreach (ActionInfo info in GameKeys.Infos) keys[(int)info.Action] = KeyChord.Of(info.Default);
+        foreach (ActionInfo info in GameKeys.Infos) keys[(int)info.Action] = info.DefaultChord;
         return keys;
     }
 }

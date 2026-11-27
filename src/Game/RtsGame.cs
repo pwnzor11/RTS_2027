@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Rts.Data;
 using Rts.Game.Audio;
+using Rts.Game.Controls;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Render;
@@ -27,6 +28,9 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     private readonly string _dataDir;
     private readonly string _rulesDir;
     private readonly Settings _settings;
+    private bool _mutedInBackground;
+    private bool _screenshotRequested;
+    private TimeSpan _titleResetAt = TimeSpan.MaxValue;
     private readonly bool _demo;
     private readonly bool _direct;
     private readonly bool _empty;
@@ -59,7 +63,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         {
             PreferredBackBufferWidth = _settings.WindowWidth,
             PreferredBackBufferHeight = _settings.WindowHeight,
-            SynchronizeWithVerticalRetrace = true,
+            SynchronizeWithVerticalRetrace = _settings.VSync,   // S47 cnc#41
             HardwareModeSwitch = DisplayPlan.HardwareModeSwitch,   // S18 GAMEREND-07: borderless, not a real mode switch
         };
         ApplyDisplayPlan(_settings);
@@ -181,6 +185,12 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     protected override void Update(GameTime gameTime)
     {
         _elapsed = gameTime.TotalGameTime;
+        if (_elapsed >= _titleResetAt)
+        {
+            Window.Title = "RTS_2027";
+            _titleResetAt = TimeSpan.MaxValue;
+        }
+
         if (_sizeDirty && _elapsed - _sizeChangedAt >= TimeSpan.FromSeconds(1)) SaveWindowSize();
 
         KeyboardState keys = Keyboard.GetState();
@@ -188,7 +198,37 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         var input = new InputFrame(keys, _previousKeys, mouse, _previousMouse, _typed);
         _typed.Clear();
 
-        _focusPause.Update(IsActive, _screens);   // S19: a single-player game pauses while the window is in the background
+        if (input.ConsumePressed(GameAction.ToggleFullscreen) && _services is not null)   // S47: Alt + Enter, as in most Windows games
+        {
+            _services.Settings = _services.Settings with { Fullscreen = !_services.Settings.Fullscreen };
+            ApplyDisplay(_services.Settings);
+            _services.Settings.Save();
+        }
+
+        if (input.ConsumePressed(GameAction.Screenshot)) _screenshotRequested = true;   // S47: taken at the end of this frame's draw
+
+        if (_services is { } svc)
+        {
+            bool mutedNow = AudioSettings.MutedNow(svc.Settings, IsActive);   // S47 cnc#35: Settings > Play options > Mute in background
+            if (mutedNow != _mutedInBackground)
+            {
+                _mutedInBackground = mutedNow;
+                AudioSettings.Apply(svc.Audio, svc.Settings, mutedNow);
+            }
+
+            if (svc.Settings.VSync != _graphics.SynchronizeWithVerticalRetrace)   // S47 cnc#41: Settings > Play options > VSync, at once
+            {
+                _graphics.SynchronizeWithVerticalRetrace = svc.Settings.VSync;
+                _graphics.ApplyChanges();
+            }
+
+            _focusPause.Update(FocusPause.CountsAsActive(IsActive, svc.Settings), _screens);   // S19: a single-player game pauses while the window is in the background
+        }
+        else
+        {
+            _focusPause.Update(IsActive, _screens);
+        }
+
         _screens.Update(input, gameTime);
 
         _previousKeys = keys;
@@ -204,6 +244,14 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
         _screens.Draw(_spriteBatch);
         _spriteBatch.End();
+
+        if (_screenshotRequested)   // S47 U-13: the frame is complete, save it and say so in the window title for a few seconds
+        {
+            _screenshotRequested = false;
+            string? saved = Screenshots.Save(GraphicsDevice);
+            Window.Title = saved is null ? "RTS_2027 - screenshot failed (see the log)" : "RTS_2027 - screenshot saved: " + Path.GetFileName(saved);
+            _titleResetAt = _elapsed + TimeSpan.FromSeconds(4);
+        }
 
         _framesCounted++;
         _fpsWindowSeconds += gameTime.ElapsedGameTime.TotalSeconds;

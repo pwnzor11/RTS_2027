@@ -15,7 +15,7 @@ public static class CommanderPrompt
     public const string Schema =
         "{\"directive\":{\"posture\":\"turtle|balanced|aggressive|allin\",\"focus\":\"economy|tech|army|air|superweapon\"," +
         "\"target\":<enemy player slot number or 255>,\"mix\":\"auto|infantry|vehicles|antiair|antistructure|antiarmour|antiinfantry\"," +
-        "\"strong_mix\":true|false,\"expand\":true|false,\"focus_cell\":[x,y] or null}," +
+        "\"strong_mix\":true|false,\"counter_minutes\":0-10,\"expand\":true|false,\"focus_cell\":[x,y] or null}," +
         "\"orders\":[{\"slot\":0-3,\"kind\":\"attack|hold|raid|expand|tech|reserve|clear\",\"cell\":[x,y] or null," +
         "\"amount\":<number>,\"minute\":<game minute, attack only>}],\"say\":\"<= 200 chars\"}";
 
@@ -26,7 +26,10 @@ public static class CommanderPrompt
         "raid = send amount units to cell; expand = found a base at cell; tech = reach tier amount (2-5); " +
         "reserve = keep amount credits in hand; clear = empty the slot.\n" +
         "Counter mixes: antiarmour builds against tanks, antiinfantry against infantry. strong_mix true makes production " +
-        "follow the mix more firmly.";
+        "follow the mix more firmly. counter_minutes (1-10, with antiair, antiarmour or antiinfantry) holds that counter mix strongly for " +
+        "that many game minutes, whatever mix your next directives say (auto), then production goes back to normal; naming another mix ends it.\n" +
+        "The summary shows YOUR ORDERS with the state of each order (PENDING, WAITING, MARCHING, ACTIVE, DONE, FAILED), estimated from what " +
+        "you can see, and RECENT FIGHTS with the units lost by type. Re-issue or change an order that FAILED; clear one that is DONE.";
 
     private const string Rules =
         "You command one side in a real-time strategy game against other players. Every 30 seconds of game time you set your " +

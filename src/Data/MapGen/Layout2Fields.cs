@@ -11,4 +11,6 @@ namespace Rts.Data.MapGen;
 /// <param name="MainCellsPct">Target size of each main-field patch in percent of the v5 size (fewer cells near the refinery: the harvesters empty them sooner and go further).</param>
 /// <param name="NaturalPct">Percent of seeds with a natural expansion yard (field 18 to 28 path cells from the start); the layout check wants 100 cells within 30 path cells, so fewer main cells need the natural more often.</param>
 /// <param name="MainBands">Number of main-field patches: 1 (one strip along the east wall) or 2 (a north and a south strip).</param>
-public sealed record Layout2Fields(int MainDist, int MainBands, int MainShare = 8, int MainCellsPct = 100, int NaturalPct = 40);
+/// <param name="ShellSoft">S47 (A-06): twelfths of the seeds whose main has a soft shell (leaky, no ramp). Default 8 (Mountains 0: its mains are always walled).</param>
+/// <param name="ShellGates2">S47 (A-06): twelfths of the seeds with a walled main and two gates; the rest of the twelve (12 - soft - gates2) is the walled main with one east ramp. Default 2 (Mountains 7).</param>
+public sealed record Layout2Fields(int MainDist, int MainBands, int MainShare = 8, int MainCellsPct = 100, int NaturalPct = 40, int ShellSoft = 8, int ShellGates2 = 2);

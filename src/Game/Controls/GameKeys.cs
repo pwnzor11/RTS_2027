@@ -122,11 +122,17 @@ public static class GameKeys
         new(GameAction.CentreOnSelection, "centre_on_selection", Camera, "Centre the view on the selection", Keys.OemComma),
         new(GameAction.CycleProductionBuilding, "cycle_production", Selection, "Jump to the next production building (selects and centres it)", Keys.PageUp),
         new(GameAction.AutoTypeGroups, "auto_type_groups", Selection, "Control groups select every unit of their types (toggle)", Keys.Insert),
+        new(GameAction.ZoomIn, "zoom_in", Camera, "Zoom in (about the middle of the view)", Keys.OemPipe),
+        new(GameAction.ZoomOut, "zoom_out", Camera, "Zoom out (about the middle of the view)", Keys.OemOpenBrackets),
+        new(GameAction.CycleSubtype, "cycle_subtype", Selection, "Cycle the unit types of a mixed selection (Deploy, Pack and stances then act on one type)", Keys.OemTilde),
+        new(GameAction.Screenshot, "screenshot", System, "Save a screenshot (PNG in RTS_2027/screenshots in your application-data folder)", Keys.PrintScreen, KeyContext.Both),
+        new(GameAction.ToggleFullscreen, "toggle_fullscreen", System, "Switch between full screen and a window", Keys.Enter, KeyContext.Both, DefaultAlt: true),
         new(GameAction.PlaceLast, "place_last", System, "Place the last structure again (Shift + drag lays a row)", Keys.OemCloseBrackets),
         new(GameAction.RepairAll, "repair_all", System, "Repair every damaged building", Keys.OemSemicolon),
         new(GameAction.SellMarked, "sell_marked", System, "Sell the marked buildings (Shift + click marks; press twice)", Keys.Delete),
         new(GameAction.HideHud, "hide_hud", System, "Hide or show the HUD (panels, cards, sidebar, minimap; for screenshots)", Keys.F11),
         new(GameAction.CameoArchive, "cameo_archive", System, "While a sidebar cameo is hovered: open its Archive entry", Keys.OemQuotes),
+        new(GameAction.TechTree, "tech_tree", System, "Open or close the tech-tree viewer", Keys.OemQuestion, KeyContext.Both),
     };
 
     /// <summary>The Controls page lines, grouped in <see cref="Groups"/> order: rebindable actions and fixed inputs shown for reference.</summary>
@@ -166,16 +172,17 @@ public static class GameKeys
             F(Camera, "Middle-drag", "Drag the view"),
             F(Camera, "Mouse wheel", "Zoom"),
             F(Camera, "Minimap click or drag", "Move the view"),
-            A(GameAction.CentreBase), A(GameAction.LastAlert), A(GameAction.CentreOnSelection), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
+            A(GameAction.CentreBase), A(GameAction.LastAlert), A(GameAction.CentreOnSelection), A(GameAction.ZoomIn), A(GameAction.ZoomOut), A(GameAction.Bookmark1), A(GameAction.Bookmark2), A(GameAction.Bookmark3), A(GameAction.Bookmark4),
             F(Selection, "Left click", "Select a unit or structure"),
             F(Selection, "Left drag", "Select units in a box"),
             F(Selection, "Shift + click or drag", "Add to the selection (Shift + click on a selected unit removes it)"),
             F(Selection, "Double-click or Ctrl + click", "Select every unit of that type on screen"),
             A(GameAction.SelectAll), A(GameAction.IdleHarvester), A(GameAction.IdleFactory),
             A(GameAction.SelectTypeMapWide), A(GameAction.SelectVehicles), A(GameAction.SelectInfantry),
-            A(GameAction.CycleProductionBuilding), A(GameAction.AutoTypeGroups),
+            A(GameAction.CycleProductionBuilding), A(GameAction.CycleSubtype), A(GameAction.AutoTypeGroups),
             F(Selection, "Alt + double-click or Alt + Ctrl + click", "Select every unit of that type on the whole map"),
-            F(Selection, "Alt + drag", "Box select: fighters only when any fighter is in the box"),
+            F(Selection, "Alt + drag", "Box select the other way round: everything, or (when Play options > Box select favours fighters is off) fighters only"),
+            F(Selection, "Left drag (fighters in the box)", "Harvesters and builders stay out of the selection (Play options > Box select favours fighters)"),
             F(Selection, "Ctrl + click a selected unit's cameo", "Keep only the selected units of that type"),
             A(GameAction.Group1), A(GameAction.Group2), A(GameAction.Group3), A(GameAction.Group4), A(GameAction.Group5),
             A(GameAction.Group6), A(GameAction.Group7), A(GameAction.Group8), A(GameAction.Group9),
@@ -200,7 +207,8 @@ public static class GameKeys
             A(GameAction.DebugStep), A(GameAction.DebugSpectator),
             A(GameAction.SpecView), A(GameAction.SpecSpeed1), A(GameAction.SpecSpeed2), A(GameAction.SpecSpeed4), A(GameAction.SpecSpeed8),
             A(GameAction.SpecDetail),
-            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud), A(GameAction.CameoArchive),
+            A(GameAction.ObjJump), A(GameAction.ObjCycle), A(GameAction.ObjList), A(GameAction.DecorToggle), A(GameAction.HideHud), A(GameAction.Screenshot), A(GameAction.ToggleFullscreen), A(GameAction.CameoArchive),
+            A(GameAction.TechTree),
         };
     }
 }

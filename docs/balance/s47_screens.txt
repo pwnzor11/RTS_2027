@@ -1,0 +1,206 @@
+tag   biome       pair                                n   var    c7   diff est512
+a11   ash_plains  authority3_v_directorate3           8  22.3  28.1   -5.8   19.6 *
+a11   ash_plains  authority3_v_expedition3            8  53.2  53.2   +0.0   46.6
+a11   ash_plains  authority3_v_left_behind3           8  34.5  40.2   -5.6   35.5
+a11   ash_plains  directorate3_v_expedition3          8  62.6  62.4   +0.3   58.5
+a11   ash_plains  directorate3_v_left_behind3         8  50.0  60.4  -10.4   47.0
+a11   ash_plains  left_behind3_v_expedition3          8  46.0  43.2   +2.8   45.8
+a12   ash_plains  authority3_v_directorate3           8  25.5  28.1   -2.6   22.8 *
+a12   ash_plains  authority3_v_expedition3            8  56.8  53.2   +3.6   50.2
+a12   ash_plains  authority3_v_left_behind3           8  33.9  40.2   -6.2   34.9 *
+a12   ash_plains  directorate3_v_expedition3          8  59.1  62.4   -3.3   55.0
+a12   ash_plains  directorate3_v_left_behind3         6  50.0  58.5   -8.5   48.8
+a12   ash_plains  left_behind3_v_expedition3          6  44.8  46.2   -1.4   41.6
+a13   ash_plains  authority3_v_directorate3           7  20.9  28.2   -7.3   18.0 *
+a13   ash_plains  authority3_v_expedition3            8  56.4  53.2   +3.2   49.8
+a13   ash_plains  authority3_v_left_behind3           7  42.4  41.2   +1.2   42.3
+a13   ash_plains  directorate3_v_expedition3          2  69.6  66.7   +2.9   61.1
+a13   ash_plains  directorate3_v_left_behind3         1  37.5  42.9   -5.4   52.0
+a15   ash_plains  authority3_v_directorate3           8  39.6  28.1  +11.5   36.9
+a15   ash_plains  authority3_v_expedition3            8  51.2  53.2   -2.0   44.6
+a15   ash_plains  authority3_v_left_behind3           8  39.3  40.2   -0.9   40.2
+a15   ash_plains  directorate3_v_expedition3          8  62.4  62.4   +0.0   58.2
+a15   ash_plains  directorate3_v_left_behind3         5  56.9  56.9   +0.0   57.4
+a15   ash_plains  left_behind3_v_expedition3          1  62.5  62.5   +0.0   43.0
+ap1   ash_plains  authority3_v_directorate3           4  25.9  23.6   +2.3   27.7 *
+ap1   ash_plains  authority3_v_expedition3            4  44.1  51.7   -7.6   39.0
+ap1   ash_plains  authority3_v_left_behind3           4  26.4  41.8  -15.4   25.7 *
+ap1   ash_plains  directorate3_v_expedition3          4  53.2  54.8   -1.6   56.7
+ap1   ash_plains  directorate3_v_left_behind3         4  48.1  58.2  -10.1   47.3
+ap1   ash_plains  left_behind3_v_expedition3          4  50.8  51.6   -0.8   42.2
+ap2   ash_plains  authority3_v_directorate3           4  17.0  23.6   -6.7   18.7 *
+ap2   ash_plains  authority3_v_expedition3            4  57.4  51.7   +5.7   52.3
+ap2   ash_plains  authority3_v_left_behind3           4  58.5  41.8  +16.7   57.8
+ap2   ash_plains  directorate3_v_expedition3          4  83.0  54.8  +28.3   86.5 *
+ap2   ash_plains  directorate3_v_left_behind3         4  54.4  58.2   -3.8   53.6
+ap2   ash_plains  left_behind3_v_expedition3          4  66.7  51.6  +15.1   58.1
+ap3   ash_plains  authority3_v_directorate3           4  34.0  23.6  +10.3   35.7
+ap3   ash_plains  authority3_v_expedition3            4  45.9  51.7   -5.8   40.8
+ap3   ash_plains  authority3_v_left_behind3           4  32.7  41.8   -9.1   32.0 *
+ap3   ash_plains  directorate3_v_expedition3          4  61.7  54.8   +6.9   65.2 *
+ap3   ash_plains  directorate3_v_left_behind3         4  36.8  58.2  -21.3   36.0
+ap3   ash_plains  left_behind3_v_expedition3          4  41.3  51.6  -10.3   32.7 *
+ap4   ash_plains  authority3_v_directorate3           4  31.4  23.6   +7.7   33.1 *
+ap4   ash_plains  authority3_v_expedition3            4  45.8  51.7   -5.9   40.7
+ap4   ash_plains  authority3_v_left_behind3           4  40.7  41.8   -1.1   40.0
+ap4   ash_plains  directorate3_v_expedition3          4  68.2  54.8  +13.4   71.7 *
+ap4   ash_plains  directorate3_v_left_behind3         4  47.3  58.2  -10.9   46.5
+ap4   ash_plains  left_behind3_v_expedition3          4  69.8  51.6  +18.2   61.3
+ap5   ash_plains  authority3_v_directorate3           4  28.6  23.6   +4.9   30.3 *
+ap5   ash_plains  authority3_v_expedition3            4  39.7  51.7  -12.0   34.6 *
+ap5   ash_plains  authority3_v_left_behind3           4  31.1  41.8  -10.7   30.4 *
+ap5   ash_plains  directorate3_v_expedition3          4  72.1  54.8  +17.3   75.6 *
+ap5   ash_plains  directorate3_v_left_behind3         4  61.5  58.2   +3.4   60.7
+ap5   ash_plains  left_behind3_v_expedition3          4  41.3  51.6  -10.3   32.7 *
+ap6   ash_plains  authority3_v_directorate3           4  24.1  23.6   +0.5   25.9 *
+ap6   ash_plains  authority3_v_expedition3            4  45.8  51.7   -5.9   40.7
+ap6   ash_plains  authority3_v_left_behind3           4  28.1  41.8  -13.7   27.4 *
+ap6   ash_plains  directorate3_v_expedition3          4  68.0  54.8  +13.2   71.5 *
+ap6   ash_plains  directorate3_v_left_behind3         4  36.8  58.2  -21.3   36.0
+ap6   ash_plains  left_behind3_v_expedition3          4  44.4  51.6   -7.2   35.9
+ap8   ash_plains  authority3_v_directorate3           4  23.6  23.6   +0.0   25.4 *
+ap8   ash_plains  authority3_v_expedition3            4  51.7  51.7   +0.0   46.6
+ap8   ash_plains  authority3_v_left_behind3           4  41.8  41.8   +0.0   41.1
+ap8   ash_plains  directorate3_v_expedition3          4  54.8  54.8   +0.0   58.2
+ap8   ash_plains  directorate3_v_left_behind3         4  58.2  58.2   +0.0   57.4
+ap8   ash_plains  left_behind3_v_expedition3          4  51.6  51.6   +0.0   43.0
+g11   glass_coast authority3_v_directorate3           8  51.2  51.2   +0.0   56.0
+g11   glass_coast authority3_v_expedition3            7  52.3  52.3   +0.0   54.9
+g11   glass_coast authority3_v_left_behind3           8  60.7  60.7   +0.0   60.6
+g11   glass_coast directorate3_v_expedition3          6  28.4  33.7   -5.3   24.7 *
+g11   glass_coast directorate3_v_left_behind3         6  48.1  48.1   +0.0   52.3
+gc1   glass_coast authority3_v_directorate3           4  66.7  66.7   +0.0   56.0
+gc1   glass_coast authority3_v_expedition3            4  56.2  56.2   +0.0   54.9
+gc1   glass_coast authority3_v_left_behind3           4  49.1  49.1   +0.0   60.6
+gc1   glass_coast directorate3_v_expedition3          4  44.6  44.6   +0.0   30.0 *
+gc1   glass_coast directorate3_v_left_behind3         4  38.0  38.0   +0.0   52.3
+gc1   glass_coast left_behind3_v_expedition3          4  49.2  49.2   +0.0   52.5
+gc2   glass_coast authority3_v_directorate3           4  59.1  66.7   -7.6   48.4
+gc2   glass_coast authority3_v_expedition3            4  75.0  56.2  +18.8   73.6 *
+gc2   glass_coast authority3_v_left_behind3           4  43.1  49.1   -5.9   54.6
+gc2   glass_coast directorate3_v_expedition3          4  72.3  44.6  +27.7   57.7
+gc2   glass_coast directorate3_v_left_behind3         4  31.5  38.0   -6.5   45.8
+gc2   glass_coast left_behind3_v_expedition3          4  67.7  49.2  +18.5   71.0 *
+gc3   glass_coast authority3_v_directorate3           4  39.0  66.7  -27.6   28.3 *
+gc3   glass_coast authority3_v_expedition3            4  55.7  56.2   -0.5   54.4
+gc3   glass_coast authority3_v_left_behind3           4  60.7  49.1  +11.7   72.2 *
+gc3   glass_coast directorate3_v_expedition3          4  44.6  44.6   +0.0   30.0 *
+gc3   glass_coast directorate3_v_left_behind3         4  60.8  38.0  +22.8   75.1 *
+gc3   glass_coast left_behind3_v_expedition3          4  50.0  49.2   +0.8   53.3
+gc4   glass_coast authority3_v_directorate3           4  55.0  66.7  -11.7   44.3
+gc4   glass_coast authority3_v_expedition3            4  54.1  56.2   -2.2   52.7
+gc4   glass_coast authority3_v_left_behind3           4  51.8  49.1   +2.7   63.3
+gc4   glass_coast directorate3_v_expedition3          4  40.7  44.6   -3.9   26.1 *
+gc4   glass_coast directorate3_v_left_behind3         4  43.9  38.0   +5.9   58.2
+gc4   glass_coast left_behind3_v_expedition3          4  55.4  49.2   +6.2   58.7
+gc5   glass_coast authority3_v_directorate3           4  55.3  66.7  -11.4   44.6
+gc5   glass_coast authority3_v_expedition3            4  35.0  56.2  -21.2   33.6 *
+gc5   glass_coast authority3_v_left_behind3           4  65.5  49.1  +16.5   77.0 *
+gc5   glass_coast directorate3_v_expedition3          4  31.6  44.6  -13.1   17.0 *
+gc5   glass_coast directorate3_v_left_behind3         4  60.4  38.0  +22.4   74.8 *
+gc5   glass_coast left_behind3_v_expedition3          4  43.3  49.2   -5.9   46.6
+gc6   glass_coast authority3_v_directorate3           4  55.6  66.7  -11.1   44.9
+gc6   glass_coast authority3_v_expedition3            4  63.3  56.2   +7.1   62.0
+gc6   glass_coast authority3_v_left_behind3           4  50.8  49.1   +1.8   62.4
+gc6   glass_coast directorate3_v_expedition3          4  36.4  44.6   -8.3   21.8 *
+gc6   glass_coast directorate3_v_left_behind3         4  44.7  38.0   +6.7   59.0
+gc6   glass_coast left_behind3_v_expedition3          4  59.0  49.2   +9.8   62.3
+gc7   glass_coast authority3_v_directorate3           4  67.3  66.7   +0.6   56.6
+gc7   glass_coast authority3_v_expedition3            4  70.5  56.2  +14.2   69.1 *
+gc7   glass_coast authority3_v_left_behind3           4  45.2  49.1   -3.9   56.7
+gc7   glass_coast directorate3_v_expedition3          4  55.7  44.6  +11.1   41.1
+gc7   glass_coast directorate3_v_left_behind3         4  16.9  38.0  -21.1   31.3 *
+gc7   glass_coast left_behind3_v_expedition3          4  58.7  49.2   +9.5   62.0
+r11   rust_belt   authority3_v_directorate3           8  51.0  53.5   -2.4   50.3
+r11   rust_belt   authority3_v_expedition3            8  57.9  61.2   -3.2   64.7
+r11   rust_belt   authority3_v_left_behind3           8  76.7  71.2   +5.5   76.5 *
+r11   rust_belt   directorate3_v_expedition3          6  48.1  77.3  -29.2   46.1
+r11   rust_belt   directorate3_v_left_behind3         8  36.6  25.9  +10.7   40.9
+r11   rust_belt   left_behind3_v_expedition3          8  46.7  56.9  -10.2   49.0
+r12   rust_belt   authority3_v_directorate3           8  51.0  53.5   -2.4   50.3
+r12   rust_belt   authority3_v_expedition3            8  57.9  61.2   -3.2   64.7
+r12   rust_belt   authority3_v_left_behind3           8  76.7  71.2   +5.5   76.5 *
+r12   rust_belt   directorate3_v_expedition3          6  48.1  77.3  -29.2   46.1
+r12   rust_belt   directorate3_v_left_behind3         8  36.6  25.9  +10.7   40.9
+r12   rust_belt   left_behind3_v_expedition3          8  46.7  56.9  -10.2   49.0
+r13   rust_belt   authority3_v_directorate3           8  55.1  53.5   +1.7   54.4
+r13   rust_belt   authority3_v_expedition3            8  68.3  61.2   +7.1   75.0 *
+r13   rust_belt   authority3_v_left_behind3           8  74.6  71.2   +3.4   74.4 *
+r13   rust_belt   directorate3_v_expedition3          5  61.8  75.5  -13.7   61.7
+r13   rust_belt   directorate3_v_left_behind3         4  33.3  30.8   +2.6   32.8 *
+r13   rust_belt   left_behind3_v_expedition3          7  53.7  56.1   -2.4   56.8
+r14   rust_belt   authority3_v_directorate3           8  62.0  53.5   +8.6   61.3
+r14   rust_belt   authority3_v_expedition3            6  58.5  58.9   -0.4   67.5 *
+r14   rust_belt   authority3_v_left_behind3           7  78.8  72.1   +6.7   77.7 *
+r14   rust_belt   directorate3_v_expedition3          1  23.1  72.7  -49.7   25.7 *
+r15   rust_belt   authority3_v_directorate3           8  62.0  53.5   +8.6   61.3
+r15   rust_belt   authority3_v_expedition3            8  57.6  61.2   -3.6   64.3
+r15   rust_belt   authority3_v_left_behind3           8  80.5  71.2   +9.3   80.3 *
+r15   rust_belt   directorate3_v_expedition3          6  30.9  77.3  -46.4   28.9 *
+r15   rust_belt   directorate3_v_left_behind3         8  43.6  25.9  +17.6   47.9
+r15   rust_belt   left_behind3_v_expedition3          8  37.7  56.9  -19.2   39.9
+r18   rust_belt   authority3_v_directorate3           8  41.7  53.5  -11.8   40.9
+r18   rust_belt   authority3_v_expedition3            8  53.6  61.2   -7.6   60.3
+r18   rust_belt   authority3_v_left_behind3           8  75.8  71.2   +4.6   75.6 *
+r18   rust_belt   directorate3_v_expedition3          6  42.9  77.3  -34.4   40.9
+r18   rust_belt   directorate3_v_left_behind3         8  35.5  25.9   +9.6   39.8
+r18   rust_belt   left_behind3_v_expedition3          8  47.6  56.9   -9.3   49.8
+r19   rust_belt   authority3_v_directorate3           8  45.5  53.5   -8.0   44.7
+r19   rust_belt   authority3_v_expedition3            8  51.3  61.2   -9.9   58.0
+r19   rust_belt   authority3_v_left_behind3           8  53.8  71.2  -17.4   53.6
+r19   rust_belt   directorate3_v_expedition3          6  51.2  77.3  -26.0   49.3
+r19   rust_belt   directorate3_v_left_behind3         8  45.0  25.9  +19.0   49.3
+rb1   rust_belt   authority3_v_directorate3           4  50.0  52.6   -2.6   50.1
+rb1   rust_belt   authority3_v_expedition3            4  68.4  71.7   -3.2   64.6
+rb1   rust_belt   authority3_v_left_behind3           4  67.7  78.6  -10.8   60.1
+rb1   rust_belt   directorate3_v_expedition3          4  78.4  72.9   +5.5   80.9 *
+rb1   rust_belt   directorate3_v_left_behind3         4  31.0  42.4  -11.3   18.9 *
+rb1   rust_belt   left_behind3_v_expedition3          4  54.1  58.7   -4.6   54.5
+rb10  rust_belt   authority3_v_directorate3           4  57.4  52.6   +4.8   57.6
+rb10  rust_belt   authority3_v_expedition3            4  79.0  71.7   +7.4   75.3 *
+rb10  rust_belt   authority3_v_left_behind3           4  79.6  78.6   +1.1   72.0 *
+rb10  rust_belt   directorate3_v_expedition3          4  63.3  72.9   -9.7   65.7 *
+rb10  rust_belt   directorate3_v_left_behind3         4  45.3  42.4   +2.9   33.1 *
+rb10  rust_belt   left_behind3_v_expedition3          4  52.5  58.7   -6.2   53.0
+rb2   rust_belt   authority3_v_directorate3           4  31.5  52.6  -21.2   31.6 *
+rb2   rust_belt   authority3_v_expedition3            4  73.8  71.7   +2.1   70.0 *
+rb2   rust_belt   authority3_v_left_behind3           4  74.2  78.6   -4.4   66.6 *
+rb2   rust_belt   directorate3_v_expedition3          4  66.0  72.9   -7.0   68.4 *
+rb2   rust_belt   directorate3_v_left_behind3         4  27.3  42.4  -15.1   15.1 *
+rb2   rust_belt   left_behind3_v_expedition3          4  61.9  58.7   +3.2   62.3
+rb3   rust_belt   authority3_v_directorate3           4  44.2  52.6   -8.4   44.3
+rb3   rust_belt   authority3_v_expedition3            4  74.6  71.7   +2.9   70.8 *
+rb3   rust_belt   authority3_v_left_behind3           4  45.8  78.6  -32.8   38.2
+rb3   rust_belt   directorate3_v_expedition3          4  85.7  72.9  +12.8   88.1 *
+rb3   rust_belt   directorate3_v_left_behind3         4  33.3  42.4   -9.0   21.2 *
+rb3   rust_belt   left_behind3_v_expedition3          4  75.4  58.7  +16.7   75.8 *
+rb4   rust_belt   authority3_v_directorate3           4  52.0  52.6   -0.6   52.1
+rb4   rust_belt   authority3_v_expedition3            4  64.5  71.7   -7.2   60.7
+rb4   rust_belt   authority3_v_left_behind3           4  77.4  78.6   -1.2   69.8 *
+rb4   rust_belt   directorate3_v_expedition3          4  78.3  72.9   +5.3   80.7 *
+rb4   rust_belt   directorate3_v_left_behind3         4  40.0  42.4   -2.4   27.8 *
+rb4   rust_belt   left_behind3_v_expedition3          4  49.2  58.7   -9.5   49.6
+rb5   rust_belt   authority3_v_directorate3           4  45.1  52.6   -7.5   45.2
+rb5   rust_belt   authority3_v_expedition3            4  65.6  71.7   -6.1   61.8
+rb5   rust_belt   authority3_v_left_behind3           4  81.0  78.6   +2.5   73.4 *
+rb5   rust_belt   directorate3_v_expedition3          4  73.1  72.9   +0.2   75.5 *
+rb5   rust_belt   directorate3_v_left_behind3         4  32.2  42.4  -10.2   20.1 *
+rb5   rust_belt   left_behind3_v_expedition3          4  60.7  58.7   +1.9   61.1
+rb6   rust_belt   authority3_v_directorate3           4  58.6  52.6   +6.0   58.7
+rb6   rust_belt   authority3_v_expedition3            4  61.9  71.7   -9.8   58.1
+rb6   rust_belt   authority3_v_left_behind3           4  67.2  78.6  -11.3   59.6
+rb6   rust_belt   directorate3_v_expedition3          4  75.6  72.9   +2.6   78.0 *
+rb6   rust_belt   directorate3_v_left_behind3         4  23.3  42.4  -19.0   11.2 *
+rb6   rust_belt   left_behind3_v_expedition3          4  65.6  58.7   +6.9   66.0 *
+rb7   rust_belt   authority3_v_directorate3           4  55.2  52.6   +2.5   55.3
+rb7   rust_belt   authority3_v_expedition3            4  59.4  71.7  -12.3   55.6
+rb7   rust_belt   authority3_v_left_behind3           4  73.3  78.6   -5.2   65.7 *
+rb7   rust_belt   directorate3_v_expedition3          4  74.4  72.9   +1.5   76.9 *
+rb7   rust_belt   directorate3_v_left_behind3         4  24.6  42.4  -17.8   12.4 *
+rb7   rust_belt   left_behind3_v_expedition3          4  57.6  58.7   -1.1   58.0
+rb9   rust_belt   authority3_v_directorate3           4  41.7  52.6  -11.0   41.8
+rb9   rust_belt   authority3_v_expedition3            4  60.0  71.7  -11.7   56.2
+rb9   rust_belt   authority3_v_left_behind3           4  61.7  78.6  -16.9   54.1
+rb9   rust_belt   directorate3_v_expedition3          4  73.3  72.9   +0.4   75.8 *
+rb9   rust_belt   directorate3_v_left_behind3         4  25.4  42.4  -17.0   13.2 *
+rb9   rust_belt   left_behind3_v_expedition3          4  50.0  58.7   -8.7   50.4

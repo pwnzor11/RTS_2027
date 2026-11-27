@@ -1,0 +1,10 @@
+# Drill: Raid text by key.
+"dr.obj.raid" = "Destroy the two power plants and the silo"
+"dr.timer.alarm" = "Alarm"
+"dr.start" = "An enemy depot sits in the north-east. Wreck the two power plants and the silo before the alarm."
+"dr.hit" = "One down."
+"dr.alarm" = "The alarm went off. Raid failed."
+"dr.lost" = "Your squad is gone."
+"dr.done" = "Depot destroyed."
+
+[voice]

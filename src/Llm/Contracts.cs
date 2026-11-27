@@ -60,7 +60,8 @@ public readonly record struct DirectiveDraft(
     bool Expand,
     short FocusX,        // -1 = no focus cell
     short FocusY,
-    bool StrongMix = false);   // S24 (M5-12): counter-building strong mix (packed as DirectiveCodec.PackStrong)
+    bool StrongMix = false,    // S24 (M5-12): counter-building strong mix (packed as DirectiveCodec.PackStrong)
+    byte CounterMinutes = 0);  // S47 (M16-A-08): 1..10 = hold this counter mix (anti-air / anti-armour / anti-infantry) with the strong weight for N game minutes, then go back to auto; 0 = until the next directive. LLM layer only: never sent to the sim
 
 /// <summary>S24 (M5-12): one standing order from a reply, before it is packed. <see cref="Kind"/> None clears the slot.
 /// <see cref="CellX"/>/<see cref="CellY"/> are -1 when the order has no cell. <see cref="Minute"/> is the game minute an

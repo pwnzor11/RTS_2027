@@ -21,6 +21,12 @@ public sealed class FocusPause
     private bool _wasActive = true;
     private IScreen? _ours;
 
+    /// <summary>
+    /// S47 (modern X8): the focus state to feed <see cref="Update"/>. With Settings > Play options > Pause when the window loses focus switched
+    /// off, a window in the background still counts as active, so no pause is pushed.
+    /// </summary>
+    public static bool CountsAsActive(bool windowActive, Settings settings) => windowActive || !settings.PauseOnFocusLoss;
+
     /// <summary>Feeds the focus state of this frame.</summary>
     public void Update(bool active, ScreenStack stack)
     {

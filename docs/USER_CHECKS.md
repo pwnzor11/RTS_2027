@@ -744,3 +744,59 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
   Rifleman damage 9 (was 8); Marine costs 130 (was 150); Glide Tank costs 900 (was 960); Directorate Rocket Trucks and Rocket Nests do a little more
   to light vehicles (78 % of full damage, was 75 %). dir_02 at the hardest tier sends slightly smaller rifle reserves. Table: docs/balance/s46_balance.md.
 - **Not updated yet:** the Field Manual PDF still lists the old Marine and Glide Tank costs.
+
+## Session 47 (2026-11-26/27)
+- **KeepAlive (C-06, mission side):** play exp_02, exp_03 and exp_04 to the win. The enemy team no longer has a hidden reserve building in a far corner
+  (the exp_02 Authority relay post, the exp_04 reserve vent are gone); the match does not end when you destroy the last visible enemy building,
+  only when the mission's own objectives say so (Player.KeepAlive, D-338). Check that none of the three ends early or hangs after the last enemy
+  building falls. Old saves are unaffected (the flag lives in the players part, SaveVersion stays 16).
+- **Tech-tree viewer (U-12):** in any match press `/` (Controls > System: "Open or close the tech-tree viewer") or open the pause menu and pick
+  "Tech tree". The title reads "TECH TREE - <your faction>" and the hint "Wheel / arrows: scroll   Hover: details   / or Esc: close". Each node shows
+  Built, Available, Locked or "Locked in this mission"; hover for "Cost: ...", "Build time: ...", "Needs: ...", "Unlocks: ..." and "Tier N". The Archive
+  entry was skipped on purpose.
+- **Drills (U-12):** Main menu > "Drills" lists three practice missions on test_32, each with your best medal. A win opens "Drill complete: Gold /
+  Silver / Bronze" with the run and the thresholds, then Continue or Retry. The limits are assumed (D-338), confirm after a playtest:
+  - **Drill: Build order:** build a Refinery, a War Factory and two Scrapers (the Refinery brings one). Gold 120 s, Silver 165 s, Bronze 240 s.
+  - **Drill: Hold the line:** hold the east gate of the yard against three waves with five riflemen, a tank, a turret and 2400 credits. Medal by units
+    plus structures lost: Gold 4 or fewer, Silver 6, Bronze 9.
+  - **Drill: Raid:** wreck two power plants and a silo with two jeeps and four riflemen before the alarm timer ends. Gold 95 s, Silver 130 s,
+    Bronze 190 s; and keep at least 5 (Gold), 4 (Silver), 3 (Bronze) of the 6 units.
+- **QoL, 15 items (U-13; picks in docs/reviews/2026-11-26_s47_qol_pick.md).** Settings rows are on the new Settings > "Play options" screen:
+  1. Sidebar follows selection (setting "Sidebar follows selection", on): select a Barracks, the sidebar shows Infantry; a War Factory, Vehicles.
+  2. Box select favours fighters (setting "Box select favours fighters", on): drag a box over harvesters and soldiers; the harvesters stay out.
+     Alt + drag takes everything.
+  3. Zoom keys: `[` zooms out, `\` zooms in (about the middle of the view).
+  4. "Mute sound in the background" (off by default): switch to another window, the game goes quiet.
+  5. Skirmish setup: the "Random factions" row with a "Roll" button picks a faction for every open slot.
+  6. "VSync" (on).
+  7. "Start zoom" (steps 0.5 / 1 / 2): the next match opens at that zoom.
+  8. "Enemy spotted" alert: an enemy unit or building coming into view near one of your buildings; End jumps to it like the other alerts.
+  9. Backquote (`` ` ``, "Cycle the unit types of a mixed selection"): each press keeps the next type of a mixed selection, so Deploy, Pack and stances
+     act on one type.
+  10. Home again steps to your next Construction Yard.
+  11. "Pause when the window loses focus" (on): turn it off and a single-player game keeps running in the background.
+  12. PrintScreen saves a PNG to the screenshots folder in the RTS_2027 application-data folder.
+  13. Double-click one of your buildings: all of its type on screen are marked; a rally right-click then sets the rally point of the marked factories.
+  14. Placing a defence: its weapon range ring shows on the placement ghost.
+  15. Alt+Enter switches between full screen and a window (rebindable in Controls > System).
+  Settings > Controls shows the new actions and "Reset all keys to defaults" restores them.
+- **auth_07 "The Defector" (C-02 pilot):** Authority campaign, new order auth_01, auth_02, auth_07, auth_03, auth_04: win auth_02 and auth_07
+  appears next (act 2, play position 5), auth_03 now needs it. You have no base: one sealed carrier, a decon truck, two jeeps, six riflemen, two
+  marksmen, two rocketeers. Drive to the spoil heaps south-east of the river; Dray (unarmed) joins and "Bring Lieutenant Dray back to the post alive"
+  appears. Lose if the "Rendezvous" timer (4 minutes, 4800 ticks) runs out before you reach the spoil heaps ("The shift has changed. The defector has
+  gone back down."), if Dray dies, or if your whole column dies. After he joins, a 30-second "Shaft Four misses him" timer sends the base's army at
+  the short north-east bridge, with hunters from the east and the south later; the long south-west road is the other way. Hidden bonus: recover the
+  reactor log from the culvert at the south-east end of the south-west bridge. Winning unlocks the Seismic Mortar. Par 5:00. Check: the briefing
+  reads like auth_01..04, the carrier keeps Dray alive, a win happens when he reaches the post (if he sits inside the carrier and the win does
+  not fire, tell me). The bot wins at every tier and the AI does not change with the tier (sweep sw47a), so tier 1 and tier 5 may feel the same.
+- **Field Manual (B-00):** open the rebuilt Field Manual and Quick Reference (144 pages): the Marine page shows cost 130 and the Glide Tank page 900
+  (the s46 numbers). The booklet build reports 34 unknown keys (tools/booklet resolve_rules.py, BACKLOG T-11): check that no page shows a raw key
+  instead of text.
+- **LLM counter hold (A-08, needs an API key):** Settings > AI commander (LLM) with a key set, start a match against the commander. The model may now
+  answer with `counter_minutes` (0-10) next to a counter mix (antiair, antiarmour, antiinfantry): the strong mix is held that many minutes, then the
+  plain directive returns. The summary it reads has a "YOUR ORDERS" block with each standing order's state (PENDING, WAITING, MARCHING, ACTIVE,
+  DONE, FAILED) and per-fight losses by unit type. No key, no check; without a key only the tests cover this. The no-key control is
+  `Tools ai commander --random-directives ... --random-counters`.
+- **Not built, design only:** the LLM-chosen build plan (A-09, docs/design/23_llm_build_plan.md) and the map layout 2 keys
+  (`[biome.<key>.layout2]`, A-06; defaults equal today, nothing changes for the player).
+- Balance: candidate D-339 (Authority infantry ash resist 600; Rust Belt ocean edge, no river) is on branch `bal-s47`, waiting for its 512-game decide; nothing to play-check on main yet. Layout 2: unchanged in play (new data keys only).

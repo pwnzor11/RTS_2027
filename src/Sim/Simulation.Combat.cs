@@ -87,6 +87,38 @@ public sealed partial class Simulation
         Array.Copy(_units.Position, _tickPosVeh, _tickPosVeh.Length);
         Array.Copy(_infantry.Position, _tickPosInf, _tickPosInf.Length);
         _useTickPos = true;
+        _spatialBuilt[0] = _spatialBuilt[1] = false;   // M-28: the grids are rebuilt lazily from the new snapshot
+    }
+
+    // M-28 (D-314): bucket indexes over the start-of-tick positions of vehicles ([0]) and infantry ([1]). Derived scratch: never saved or hashed;
+    // only used while _useTickPos is true, and rebuilt from the snapshot on first use each tick, so a load needs nothing. A spawn after the
+    // build (SlotArray.AllocSerial moved) makes the index incomplete, so that query falls back to the old full walk.
+    private SpatialIndex?[] _spatial = new SpatialIndex?[2];
+    private readonly bool[] _spatialBuilt = new bool[2];
+
+    /// <summary>Test hook (M-28): false forces the old full slot walk, to compare it with the index. Scratch, not state.</summary>
+    internal bool SpatialIndexEnabled = true;
+
+    /// <summary>The up-to-date spatial index of a mobile kind, or null when the full walk must be used (not in a tick, or slots were spawned since the build).</summary>
+    private SpatialIndex? SpatialFor(ActorKind kind)
+    {
+        if (!_useTickPos || !SpatialIndexEnabled || kind == ActorKind.Building) return null;
+        int k = (int)kind;
+        MobileStore store = kind == ActorKind.Vehicle ? _units : _infantry;
+        if (!_spatialBuilt[k]) return BuildSpatial(kind, store);
+        SpatialIndex idx = _spatial[k]!;
+        return idx.BuiltSerial == store.Slots.AllocSerial ? idx : null;
+    }
+
+    private SpatialIndex BuildSpatial(ActorKind kind, MobileStore store)
+    {
+        int k = (int)kind;
+        SpatialIndex? idx = _spatial[k];
+        if (idx == null) idx = _spatial[k] = new SpatialIndex(store.Capacity);
+        idx.Build(store.Slots, kind == ActorKind.Vehicle ? _tickPosVeh : _tickPosInf, Setup.Map.Width, Setup.Map.Height);
+        idx.BuiltSerial = store.Slots.AllocSerial;
+        _spatialBuilt[k] = true;
+        return idx;
     }
 
     // Where combat sees the actor: its start-of-tick position while a tick is running (buildings never move).
@@ -189,25 +221,39 @@ public sealed partial class Simulation
             var kind = (ActorKind)k;
             long kindMaxD2 = mobilesOnlyBeyondRange && kind == ActorKind.Building ? Math.Min(maxD2, rangeD2) : maxD2;
             SlotArray slots = SlotsOf(kind);
+            SpatialIndex? grid = SpatialFor(kind);
+            if (grid != null)
+            {
+                // M-28: only slots in the buckets the search square touches, in ascending slot order (the order of the full walk).
+                ReadOnlySpan<int> cand = grid.Query(from, (int)Math.Min(int.MaxValue / 2, (long)reach));
+                for (int c = 0; c < cand.Length; c++)
+                    ConsiderTarget(player, kind, slots, cand[c], from, w, minD2, kindMaxD2, ref best, ref bestD, ref bestHp);
+                continue;
+            }
             int cap = slots.Capacity;
             for (int i = 1; i < cap; i++)
-            {
-                if (!slots.IsIndexAlive(i) || RelationOf(player, PlayerAt(kind, i)) != Relation.Enemy || HealthAt(kind, i) <= 0) continue;
-                LeptonCoord pt;
-                if (kind == ActorKind.Building) { if (!TargetPoint(new ActorRef(kind, slots.IdOf(i)), from, out pt)) continue; }
-                else pt = CombatPositionAt(kind, i);
-                long d = LeptonMath.DistanceSquared(from, pt);
-                if (d > bestD || d > kindMaxD2 || d < minD2) continue;
-                // Equal distance: the weaker target (lower health) first, then kind and slot order. Health is the same for a
-                // mirrored pair of targets, slot order is not.
-                int hp = HealthAt(kind, i);
-                if (d == bestD && hp >= bestHp) continue;
-                if (!IsTargetVisible(player, kind, i)) continue;
-                if (IsUntargetableBy(player, kind, i) || !WeaponCanTarget(w, kind, i)) continue;   // M3-05
-                bestD = d; bestHp = hp; best = new ActorRef(kind, slots.IdOf(i));
-            }
+                ConsiderTarget(player, kind, slots, i, from, w, minD2, kindMaxD2, ref best, ref bestD, ref bestHp);
         }
         return best;
+    }
+
+    // One candidate of AcquireTarget's walk (the body of the old loop, unchanged).
+    private void ConsiderTarget(byte player, ActorKind kind, SlotArray slots, int i, LeptonCoord from, WeaponType w, long minD2, long kindMaxD2,
+        ref ActorRef best, ref long bestD, ref int bestHp)
+    {
+        if (!slots.IsIndexAlive(i) || RelationOf(player, PlayerAt(kind, i)) != Relation.Enemy || HealthAt(kind, i) <= 0) return;
+        LeptonCoord pt;
+        if (kind == ActorKind.Building) { if (!TargetPoint(new ActorRef(kind, slots.IdOf(i)), from, out pt)) return; }
+        else pt = CombatPositionAt(kind, i);
+        long d = LeptonMath.DistanceSquared(from, pt);
+        if (d > bestD || d > kindMaxD2 || d < minD2) return;
+        // Equal distance: the weaker target (lower health) first, then kind and slot order. Health is the same for a
+        // mirrored pair of targets, slot order is not.
+        int hp = HealthAt(kind, i);
+        if (d == bestD && hp >= bestHp) return;
+        if (!IsTargetVisible(player, kind, i)) return;
+        if (IsUntargetableBy(player, kind, i) || !WeaponCanTarget(w, kind, i)) return;   // M3-05
+        bestD = d; bestHp = hp; best = new ActorRef(kind, slots.IdOf(i));
     }
 
     // ---- aiming and firing --------------------------------------------------------------------

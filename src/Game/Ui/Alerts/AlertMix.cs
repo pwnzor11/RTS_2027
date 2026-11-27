@@ -73,7 +73,7 @@ public sealed class AlertMix : IEquatable<AlertMix>
     /// <summary>The category of an alert line.</summary>
     public static AlertCategory CategoryOf(AlertKind kind) => kind switch
     {
-        AlertKind.BaseUnderAttack or AlertKind.UnitUnderAttack or AlertKind.HarvesterUnderAttack => AlertCategory.Attack,
+        AlertKind.BaseUnderAttack or AlertKind.UnitUnderAttack or AlertKind.HarvesterUnderAttack or AlertKind.EnemySpotted => AlertCategory.Attack,
         AlertKind.BuildingLost or AlertKind.UnitLost => AlertCategory.Losses,
         AlertKind.LowPower => AlertCategory.Power,
         AlertKind.SuperweaponReady or AlertKind.SuperweaponLaunched => AlertCategory.Superweapon,
