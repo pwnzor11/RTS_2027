@@ -169,6 +169,8 @@ public enum GameAction
     ZoomIn,
     /// <summary>S47 cnc#3: zoom out one step, about the middle of the map view.</summary>
     ZoomOut,
+    /// <summary>S47 cnc#9: keep only the next unit type of a mixed selection (after the last type, the whole group again).</summary>
+    CycleSubtype,
     /// <summary>A43-QOL-14: place the structure or defence placed last once more (placement mode when one is finished, else queue one).</summary>
     PlaceLast,
     /// <summary>A43-QOL-15: switch repair on for every damaged own building (one ordinary Repair command each).</summary>

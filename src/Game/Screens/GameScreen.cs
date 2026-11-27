@@ -1970,6 +1970,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (input.ConsumePressed(GameAction.SelectVehicles)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Vehicle && IsFighter(v)).ToList(), input);   // QOL-11
         if (input.ConsumePressed(GameAction.SelectInfantry)) SelectMapWide(Selection.Army(_renderUnits, Me, v => v.Kind == UnitKind.Infantry && IsFighter(v)).ToList(), input);   // QOL-11
         if (input.ConsumePressed(GameAction.CycleProductionBuilding)) CycleProduction();   // QOL-05
+        if (input.ConsumePressed(GameAction.CycleSubtype) && _selection.Count > 1) CycleSubtype();   // S47 cnc#9
         if (input.ConsumePressed(GameAction.AutoTypeGroups))   // QOL-17
         {
             _groups.AutoByType = !_groups.AutoByType;
@@ -2087,6 +2088,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     // QOL-05: the centre of the selected units, or of the selected building when no unit is selected.
+    private readonly SubtypeCycle _subtypes = new();
+
+    private void CycleSubtype()
+    {
+        var types = new Dictionary<UnitKey, (UnitKind, int)>();
+        foreach (RenderUnit u in _renderUnits) types[UnitKey.Of(u.View)] = (u.View.Kind, u.View.TypeIndex);
+        IReadOnlyList<UnitKey>? next = _subtypes.Next(_selection.Units, k => types.TryGetValue(k, out (UnitKind, int) t) ? t : null);
+        if (next is null) return;
+        _selection.Replace(next);
+        Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
+    }
+
     private void ZoomByKey(int steps)
     {
         Rectangle view = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
