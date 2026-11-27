@@ -198,6 +198,13 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         var input = new InputFrame(keys, _previousKeys, mouse, _previousMouse, _typed);
         _typed.Clear();
 
+        if (input.ConsumePressed(GameAction.ToggleFullscreen) && _services is not null)   // S47: Alt + Enter, as in most Windows games
+        {
+            _services.Settings = _services.Settings with { Fullscreen = !_services.Settings.Fullscreen };
+            ApplyDisplay(_services.Settings);
+            _services.Settings.Save();
+        }
+
         if (input.ConsumePressed(GameAction.Screenshot)) _screenshotRequested = true;   // S47: taken at the end of this frame's draw
 
         bool mutedNow = AudioSettings.MutedNow(_services.Settings, IsActive);   // S47 cnc#35: Settings > Play options > Mute in background

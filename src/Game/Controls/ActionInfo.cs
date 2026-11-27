@@ -11,4 +11,9 @@ namespace Rts.Game.Controls;
 /// <param name="Description">One short line shown beside the key.</param>
 /// <param name="Default">The factory key.</param>
 /// <param name="Context">Where the action is read.</param>
-public sealed record ActionInfo(GameAction Action, string Id, string Group, string Description, Keys Default, KeyContext Context = KeyContext.Play);
+/// <param name="DefaultAlt">S47: true when the factory key is Alt + <paramref name="Default"/> (for example Alt + Enter).</param>
+public sealed record ActionInfo(GameAction Action, string Id, string Group, string Description, Keys Default, KeyContext Context = KeyContext.Play, bool DefaultAlt = false)
+{
+    /// <summary>The factory key as a chord (<see cref="Default"/> with Alt when <see cref="DefaultAlt"/>).</summary>
+    public KeyChord DefaultChord => new(Default, DefaultAlt);
+}

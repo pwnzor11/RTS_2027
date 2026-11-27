@@ -173,6 +173,8 @@ public enum GameAction
     CycleSubtype,
     /// <summary>S47: save the game picture as a PNG in the screenshots folder (works in every game and menu).</summary>
     Screenshot,
+    /// <summary>S47: switch between full screen and a window (works in every game and menu).</summary>
+    ToggleFullscreen,
     /// <summary>A43-QOL-14: place the structure or defence placed last once more (placement mode when one is finished, else queue one).</summary>
     PlaceLast,
     /// <summary>A43-QOL-15: switch repair on for every damaged own building (one ordinary Repair command each).</summary>

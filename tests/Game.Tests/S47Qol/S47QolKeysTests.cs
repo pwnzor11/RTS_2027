@@ -20,4 +20,16 @@ public sealed class S47QolKeysTests
         Assert.Contains(GameKeys.Rows, r => r.Action == action);
         Assert.Empty(KeyBindings.Default.Conflicts());
     }
+
+    [Fact]
+    public void Full_screen_is_Alt_plus_Enter_and_does_not_clash_with_Talk()
+    {
+        KeyChord chord = KeyBindings.Default.GetChord(GameAction.ToggleFullscreen);
+        Assert.Equal(new KeyChord(Keys.Enter, true), chord);
+        Assert.True(KeyBindings.Default.IsDefault(GameAction.ToggleFullscreen));
+        Assert.Equal(Keys.Enter, KeyBindings.Default.Get(GameAction.Talk));
+        Assert.Empty(KeyBindings.Default.Conflicts());
+        Assert.Contains(GameKeys.Rows, r => r.Action == GameAction.ToggleFullscreen);
+        Assert.True(KeyBindings.Default.IsAllDefault);
+    }
 }
