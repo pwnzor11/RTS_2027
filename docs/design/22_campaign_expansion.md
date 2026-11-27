@@ -1,7 +1,7 @@
 # Design 22 · Campaign expansion: 4 to 12 missions per faction (M16-C-02, D-333)
 
-Status: **outline for the owner to review**. No code. Every story choice below is a proposal (assumed — confirm) until the owner
-answers section 1; nothing here changes a built mission. Names are existing lore names only (Q-G, D-154); places come from
+Status: **outline, owner answers Q1-Q4 logged as D-337; Q5-Q9 open**. No code. Every story choice not covered by D-337 is a
+proposal (assumed — confirm); nothing here changes a built mission. Names are existing lore names only (Q-G, D-154); places come from
 docs/lore. All numbers are `(tune)`. One pilot mission (section 6) is built afterwards by another package from this outline.
 
 Inputs: D-030 (10-12 per side, one spine, 2-3 choice points that rejoin, map reuse, mission mix about 1/2 build-and-destroy,
@@ -21,45 +21,26 @@ all, every one slotted so that the tech climb the built missions expect still ho
 once), introducing each item in story; (2) they add the mission types the built campaign lacks: there is **no true no-base
 commando mission today**, and D-030 wants a quarter of them; (3) they turn the leaders' Archive "secrets" (docs/lore/leaders.md,
 expedition.md, left_behind.md) into mission beats: Dray's defection, Fenn's sealed depot, Tern Point, Kell's rescue flight,
-Larkin's rewritten order, Order Seven's buried warheads. Two missions per faction are marked as the **cut line**, so the owner
-can stop at 10 without reshaping anything. Two slots per faction are marked for C-03 choice points, built later.
+Larkin's rewritten order, Order Seven's buried warheads. All 12 missions per faction are required (D-337). The four campaigns stay
+parallel stories (D-337): they echo each other but never share a battle. Two slots per faction are marked for C-03 choice points,
+built later.
 
-### Owner questions (numbered; options with trade-offs; my recommendation last)
+### Answered by the owner (D-337)
+- **Q1 · Length per faction: ANSWERED (D-337): 12 missions per faction, no cut line.** All 12 are required; four acts of three.
+  (Options were 10, 12, or 12 with a cut line to fall back to 10.)
+- **Q2 · Do the campaigns interlock: ANSWERED (D-337): parallel.** Four separate stories in the same war; no battle is played from
+  two sides. Other campaigns appear only as **story echoes** (a radio line, a cameo, a place or rumour another campaign also knows),
+  never as the same fight. (Options were parallel, mirrored pairs, or hard interlock with progress flags.)
+- **Q3 · When Dray defects: ANSWERED (D-337): act 2, Authority play position 5** (mission id `auth_07`, "The Defector"). The
+  auth_04 briefing line "LIEUTENANT DRAY HAS CROSSED TO OUR SIDE" still reads true; a later package may soften it.
+- **Q4 · New unlocks and the built missions: ANSWERED (D-337): carry-over allowed, then re-sweep.** The campaign tech set carries
+  forward (CampaignService.AllowListFor adds it to every later mission's allow-list), so new missions may unlock roster items no
+  mission uses today (auth_seismic_mortar, auth_blockhouse, auth_foam_truck, dir_volunteer, dir_agitprop, dir_delver, dir_ash_sower,
+  dir_informant, dir_redoubt, dir_bunker, lb_tow, lb_dust_sail, lb_scrap_wall, exp_barrage_lander, exp_repair_hover, exp_minelayer,
+  exp_picket, exp_canister_skiff, exp_gyro), and every built mission after such an unlock is re-swept to the Q-75 targets (12 seeds,
+  Pi cluster, D-253).
 
-**Q1 · Length per faction.**
-(a) 10 per faction: 24 new missions, acts of 3/3/2/2; smaller, but act 4 stays as thin as today.
-(b) 12 per faction: 32 new missions, four even acts of three; the most story room, the most work (about 32 x 10-12 human-equivalent
-hours by the pilot report, plus sweeps).
-(c) Design 12, build in act waves, with two cut-line missions per faction (marked below) dropped if the owner wants 10.
-**Recommendation: (c).** The outline costs the same either way, and the cut line is chosen so dropping it moves no tech.
-
-**Q2 · Do the four campaigns interlock?**
-(a) Stay parallel, as now (D-154): each story stands alone, no shared events beyond the four acts.
-(b) Mirrored pairs: some battles are played from both sides on the same map (e.g. Tern Point by the Authority and by the Left
-Behind), cameo radio lines cross, and Archive crossings reward playing more than one campaign. No result carries between campaigns,
-so there is still no canon winner.
-(c) Hard interlock: what you did in one campaign changes another (progress flags). Contradicts D-154's "no canon winner" and
-multiplies testing.
-**Recommendation: (b).** It is what D-030's map reuse already does (auth_01 and lb_01 are the same convoy); section 4 lists the pairs.
-
-**Q3 · When does Lieutenant Dray defect?** (03_setting names "a defector mid-campaign"; today he only appears in auth_04.)
-(a) Act 2 (Authority mission 5, "The Defector"): he becomes a recurring voice for acts 2-4 and drives two later missions. The
-auth_04 briefing line "LIEUTENANT DRAY HAS CROSSED TO OUR SIDE" still reads true; a later package may soften it to "WILL SPEAK ON
-THE RADIO".
-(b) Act 4 (mission 10, just before the finale): matches auth_04's wording exactly, but he is a one-act character.
-(c) Act 3: a middle path; the pilot would move to the Glass Coast map.
-**Recommendation: (a).** The pilot (section 6) is written for (a); with (b) it moves to ash_reckoning and grows from S to M.
-
-**Q4 · New unlocks and the built missions.** The campaign tech set carries forward (CampaignService.AllowListFor adds it to every
-later mission's allow-list), so anything a new mission unlocks also appears in the built missions after it.
-(a) New missions may unlock roster items no mission uses today (auth_seismic_mortar, auth_blockhouse, auth_foam_truck, dir_volunteer,
-dir_agitprop, dir_delver, dir_ash_sower, dir_informant, dir_redoubt, dir_bunker, lb_tow, lb_dust_sail, lb_scrap_wall,
-exp_barrage_lander, exp_repair_hover, exp_minelayer, exp_picket, exp_canister_skiff, exp_gyro, exp_survey_hover, exp_pioneer), and the
-built missions after them are re-swept to the Q-75 targets (12 seeds, Pi cluster, D-253).
-(b) No leaks: new missions only introduce items the next built mission already starts with; the unused roster stays skirmish-only.
-(c) Re-spread the whole climb so every mission unlocks 1-3 items, editing the built missions' starts_with too (cleanest curve; every
-built mission retuned).
-**Recommendation: (a).** About twenty units and buildings never appear in a campaign today; the sweeps are cheap on the cluster.
+### Still open (owner; options with trade-offs, my recommendation last)
 
 **Q5 · Upgrades in the campaign.** As far as I read the code, upgrades are **not** mission-gated today: `Simulation.CanResearch`
 does not consult `UnlockFilter`, so any upgrade whose prerequisites are met can be researched in any mission.
@@ -104,7 +85,9 @@ Kell's flight, Larkin's rewritten orders, Harrowgate's death, Roque's cores, Str
 - **Play order and acts.** Act 1 = missions 1-3 (spring 2001), act 2 = 4-6 (early summer), act 3 = 7-9 (late summer/autumn),
   act 4 = 10-12 (autumn/winter). Built missions sit at **1, 4, 8, 12** in every campaign, so the cross-faction timeline lines up.
 - **Ids.** Built ids stay (progress files, Archive unlocks, ending conditions and `open_after` name them). New ids continue the
-  numbering in play order: `<faction>_05` .. `<faction>_12`; locale prefixes follow the id number (a5..a12, d5..d12, l5..l12,
+  numbering in play order of the new missions only: play positions 2, 3, 5, 6, 7, 9, 10, 11 get `<faction>_05`, `_06`, `_07`, `_08`,
+  `_09`, `_10`, `_11`, `_12` in that order (positions 1, 4, 8, 12 keep `_01`.. `_04`). So the id number is **not** the play
+  position: e.g. play position 5 is `auth_07`. The tables below give both; locale prefixes follow the id number (a5..a12, d5..d12, l5..l12,
   e5..e12). The campaign list file, not the id, sets play order.
 - **Tech slot-in rule.** A new mission's `starts_with` is a subset of what the previous mission ends with. A new mission placed before
   a built one introduces items the built one already starts with (no change there). New unlocks outside that set follow Q4.
@@ -123,19 +106,19 @@ Kell's flight, Larkin's rewritten orders, Harrowgate's death, Roque's cores, Str
 ## 3 · The four campaigns
 
 Columns: play position, id, title, type (B&D build-and-destroy, D/E defend or escort, CMD commando/no-base), map, unlocks on win,
-curve, size. **Cut** = cut-line candidate for a 10-mission campaign. **C-03** = reserved choice slot.
+curve, size. **C-03** = reserved choice slot. All 12 rows are required (D-337).
 
 ### 3.1 Authority (hero Brigadier Wrenfield; Pell by teletype; Fenn, Dray)
 
 | # | Id | Title | Type | Map | Unlocks on win | Curve | Size |
 |---|---|---|---|---|---|---|---|
 | 1 | auth_01 | Survey Convoy (built) | escort, then build | rustbelt_m2 | auth_turret | Intro | built |
-| 2 | auth_05 | Hatch Country **(Cut)** | CMD | rustbelt_m2 (north) | auth_engineer, auth_rocketeer | Low | S |
+| 2 | auth_05 | Hatch Country | CMD | rustbelt_m2 (north) | auth_engineer, auth_rocketeer | Low | S |
 | 3 | auth_06 | The Mill Town | B&D | rustbelt_mill | auth_tank, auth_scraper, auth_silo, auth_ration_hall, auth_seismograph | Low | M |
 | 4 | auth_02 | The Junction (built) | defend | rustbelt_m2 | auth_engineering (T2) and four more | Mid | built |
-| 5 | auth_07 | The Defector (**pilot**) | CMD / escort | rustbelt_m2 | auth_seismic_mortar (Q4 a) | Mid | S |
-| 6 | auth_08 | Shaft Four **(C-03)** | B&D | rustbelt_mill | auth_blockhouse, auth_foam_truck (Q4 a); auth_up_sodium_lamps (Q5 b) | Mid+ | M |
-| 7 | auth_09 | Fenn's Map **(Cut)** | CMD | glass_coast_e1 (south dunes) | auth_up_flak_vests (Q5 b) | Mid | S |
+| 5 | auth_07 | The Defector (**pilot**, play position 5) | CMD / escort | rustbelt_m2 | auth_seismic_mortar (D-337 Q4) | Mid | S |
+| 6 | auth_08 | Shaft Four **(C-03)** | B&D | rustbelt_mill | auth_blockhouse, auth_foam_truck (D-337 Q4); auth_up_sodium_lamps (Q5 b) | Mid+ | M |
+| 7 | auth_09 | Fenn's Map | CMD | glass_coast_e1 (south dunes) | auth_up_flak_vests (Q5 b) | Mid | S |
 | 8 | auth_03 | The Coast Road (built) | escort, two fronts | glass_coast_e1 | auth_signals_hq (T3) and seven more | Mid+ | built |
 | 9 | auth_10 | Tern Point | B&D | tern_point | auth_up_composite_armour (Q5 b) | High | M |
 | 10 | auth_11 | The Buried Warheads **(C-03)** | CMD / escort | ash_reckoning (north bank) | auth_up_tungsten_shot (Q5 b) | High | M |
@@ -167,10 +150,10 @@ Mix: B&D 6 (01, 06, 08, 10, 12, 04), D/E 3 (02, 03, 07), CMD 3 (05, 09, 11). Mat
   last 1990 convoy never returned. Pell orders the railhead cleared; Wrenfield goes in person. Left Behind bands and a Directorate
   salvage team hold the stranded trains; first howitzers and airfield. Hidden bonus: the platform ledger, the names list. It sets up
   the ending slide where Wrenfield reads the four thousand names. Wrenfield's brother is never named (auth campaign note 3).
-  Mirror of lb_10.
+  Echo: the Left Behind campaign remembers the railhead its own way (lb_10, a different fight).
 - **auth_11 The Buried Warheads.** Dray knows where Order Seven's warheads lie: three vaults under the old launch sites by the
   Reckoning river (his secret). Escort his engineers to each vault and hold an engineer on the vault for a count (`OnHold`) while
-  Directorate bore crews race to arm them. Mirror of dir_12. **C-03:** disarm the vaults (this) or let them be and strike the device
+  Directorate bore crews race to arm them. Echo: the Directorate digs its own tunnel head in dir_12. **C-03:** disarm the vaults (this) or let them be and strike the device
   directly (alternative B, a shorter, harder auth_04 setup).
 - **auth_12 The Ford.** The device sits across the river. Break the Directorate rocket-nest line on the north bank, seize the ford,
   and get the first six units across: the start state auth_04 already assumes. First real air fight: interceptors against
@@ -181,15 +164,15 @@ Mix: B&D 6 (01, 06, 08, 10, 12, 04), D/E 3 (02, 03, 07), CMD 3 (05, 09, 11). Mat
 | # | Id | Title | Type | Map | Unlocks on win | Curve | Size |
 |---|---|---|---|---|---|---|---|
 | 1 | dir_01 | The First Hatch (built) | defend | rustbelt_m2 | dir_sapper | Intro | built |
-| 2 | dir_05 | Night Shift **(Cut)** | CMD | rustbelt_m2 (north) | dir_smelter_vent, dir_scraper | Low | S |
+| 2 | dir_05 | Night Shift | CMD | rustbelt_m2 (north) | dir_smelter_vent, dir_scraper | Low | S |
 | 3 | dir_06 | The Assembly Bore | B&D | rustbelt_mill | dir_assembly_bore, dir_rocket_truck, dir_cistern, dir_bunk_gallery | Low | M |
 | 4 | dir_02 | The Convoy Roads (built) | B&D raid | rustbelt_m2 | dir_isotope_works (T2), dir_mole, dir_rocket_nest | Mid | built |
-| 5 | dir_07 | Shaft Seven | defend | annex_foothills | dir_volunteer (Q4 a); dir_up_tunnel_bracing (Q5 b) | Mid | M |
-| 6 | dir_08 | A Redistribution of Effort **(C-03)** | CMD / escort | annex_foothills | dir_informant (Q4 a) | Mid | S |
-| 7 | dir_09 | The Glass Road | B&D | glass_coast_e1 (west) | dir_agitprop (Q4 a); dir_up_lead_lining (Q5 b) | Mid+ | M |
+| 5 | dir_07 | Shaft Seven | defend | annex_foothills | dir_volunteer (D-337 Q4); dir_up_tunnel_bracing (Q5 b) | Mid | M |
+| 6 | dir_08 | A Redistribution of Effort **(C-03)** | CMD / escort | annex_foothills | dir_informant (D-337 Q4) | Mid | S |
+| 7 | dir_09 | The Glass Road | B&D | glass_coast_e1 (west) | dir_agitprop (D-337 Q4); dir_up_lead_lining (Q5 b) | Mid+ | M |
 | 8 | dir_03 | The Launch Sites (built) | two fronts, hold | glass_coast_e1 | dir_commissar, dir_rad_mortar, dir_mast, dir_mooring, dir_dirigible | Mid+ | built |
-| 9 | dir_10 | Strangers on the Dunes **(Cut)** | B&D | tern_point | dir_redoubt, dir_bunker (Q4 a) | High | M |
-| 10 | dir_11 | Fuel for the Fleet **(C-03)** | B&D | ash_reckoning (south shore) | dir_delver, dir_ash_sower (Q4 a); dir_up_hot_cores (Q5 b) | High | M |
+| 9 | dir_10 | Strangers on the Dunes | B&D | glass_coast_e1 (dunes) | dir_redoubt, dir_bunker (D-337 Q4) | High | M |
+| 10 | dir_11 | Fuel for the Fleet **(C-03)** | B&D | ash_reckoning (south shore) | dir_delver, dir_ash_sower (D-337 Q4); dir_up_hot_cores (Q5 b) | High | M |
 | 11 | dir_12 | Order Seven | escort / tunnel | ash_reckoning | dir_up_blackout_canisters (Q5 b) | High | M |
 | 12 | dir_04 | The Sunrise (built, finale) | hold, then fire | ash_reckoning | dir_committee_hall (T3), dir_sunrise and three more | Peak | built |
 
@@ -201,10 +184,10 @@ dirigible raid if the owner wants the exact D-030 mix.
   Hidden bonus: bring every sapper home. Introduces the smelter vent and scraper economy dir_02 starts with.
 - **dir_06 The Assembly Bore.** First full shift on the surface. Dr. Perpetua Lund speaks for the first time (the Isotope Works
   chief, "keep the reactors warm"): build the smelter vent, cistern, bunk gallery and assembly bore under a scrap field in the mill
-  town and clear the Authority survey camp that has found it. First rocket trucks. Mirror of auth_06 (same town, other side).
+  town and clear the Authority survey camp that has found it. First rocket trucks. Echo: the Authority fights for a mill town on the same rail line in auth_06 (a different fight).
 - **dir_07 Shaft Seven.** Shaft Seven flooded in 1994 and its reactor failed. Lund wants its core: hold the shaft head in the
   mountain foothills while moles drag the core out against an Authority column. Halfway through, Thrall announces on every speaker
-  that "an engineer of Shaft Four has walked into the light" (Dray, mirror of auth_07) and that informants will be posted.
+  that "an engineer of Shaft Four has walked into the light" (Dray; an echo of auth_07, heard only as an announcement) and that informants will be posted.
 - **dir_08 A Redistribution of Effort.** A battalion that would not advance is to be "redistributed". The Voice reads the order, and
   then a weather report that tells the player, in plain words to anyone listening, to bring the battalion home the long way (Larkin's
   secret, Q9 b). Escort the conscripts to a far hatch past Authority patrols and Commissariat informants (a scripted hostile slot).
@@ -214,14 +197,14 @@ dirigible raid if the owner wants the exact D-030 mix.
   ground (scout zones), drive the line across, and destroy the Authority coast-watch relays that would warn the pads. A Left Behind
   caravan plays a Directorate broadcast back with the words changed (the Kettle's retuned speaker, cameo). First Agitprop Crawler.
 - **dir_10 Strangers on the Dunes.** The caravans are hunting the loudspeaker crawlers. Break the band camped on the Tern Point
-  railhead and recover the speakers; first dirigibles over the dunes. Mirror of lb_09. Cut-line: dir_03's unlocks cover dir_11.
+  railhead and recover the speakers; first dirigibles over the dunes. Echo: the caravans tell their side as rumour (lb_09).
 - **dir_11 Fuel for the Fleet.** Commissioner Strand asked the Directorate to leave the fleet alone (dir_03). Thrall does not agree:
   destroy the Expedition's dredge works and beachhead on the ash plain before its carrier group arrives. Dirigibles against SAM
   mounts; Lund asks on the radio what the fuel is for. **C-03:** strike the fleet (this) or let it dredge and take the fuel later
   (alternative B: raid a loaded tanker convoy instead).
 - **dir_12 Order Seven.** The Sunrise Device needs a finished hatch near its target (dir_04's rule). Drive the tunnel line under the
   river to the south bank: escort bores through Authority patrols and stand up the tunnel-head hatch that dir_04 opens with. The
-  committee that writes the Director's addresses is hinted (Harrowgate's secret, Q9 b). Mirror of auth_11.
+  committee that writes the Director's addresses is hinted (Harrowgate's secret, Q9 b). Echo: the Authority hunts warhead vaults in auth_11.
 
 ### 3.3 Left Behind (hero war-captain Jessup Calloway-Ross; Speaker Marrow Tindall; Old Ottoline Vane)
 
@@ -231,13 +214,13 @@ D-155 order kept: the Authority in acts 1-2, the Directorate in act 3, the Exped
 |---|---|---|---|---|---|---|---|
 | 1 | lb_01 | The Refused (built) | ambush, B&D | rustbelt_m2 | lb_garage_rig | Intro | built |
 | 2 | lb_05 | Under One Banner | B&D | rustbelt_m2 (west) | lb_buggy, lb_gleaner | Low | M |
-| 3 | lb_06 | Salvage Rights **(Cut)** | CMD (economy) | rustbelt_mill | lb_hauler, lb_lookout (T2) | Low | S |
+| 3 | lb_06 | Salvage Rights | CMD (economy) | rustbelt_mill | lb_hauler, lb_lookout (T2) | Low | S |
 | 4 | lb_02 | Road Posts (built) | B&D | rustbelt_m2 | lb_bench, lb_harpoon_wagon, lb_tinker, lb_drifter_brute | Mid | built |
-| 5 | lb_07 | A Name for the Brigadier | ambush / escort | rustbelt_m2 | lb_tow (Q4 a); lb_up_ash_wraps (Q5 b) | Mid | S |
-| 6 | lb_08 | Kettle Flat **(C-03)** | defend / evacuate | rustbelt_m2 (south) | lb_scrap_wall (Q4 a); lb_up_quick_pack (Q5 b) | Mid+ | M |
-| 7 | lb_09 | Strangers with Loudspeakers **(Cut)** | CMD raid | glass_coast_e1 | lb_dust_sail (Q4 a) | Mid | S |
+| 5 | lb_07 | A Name for the Brigadier | ambush / escort | rustbelt_m2 | lb_tow (D-337 Q4); lb_up_ash_wraps (Q5 b) | Mid | S |
+| 6 | lb_08 | Kettle Flat **(C-03)** | defend / evacuate | rustbelt_m2 (south) | lb_scrap_wall (D-337 Q4); lb_up_quick_pack (Q5 b) | Mid+ | M |
+| 7 | lb_09 | Strangers with Loudspeakers | CMD raid | glass_coast_e1 | lb_dust_sail (D-337 Q4) | Mid | S |
 | 8 | lb_03 | Hatch Field (built) | two fronts | glass_coast_e1 | lb_rotor_pad (T3) and four more | Mid+ | built |
-| 9 | lb_10 | The Platform | defend, two fronts | tern_point | lb_up_scrap_plate (Q5 b) | High | M |
+| 9 | lb_10 | The Platform | defend, two fronts (Directorate) | tern_point | lb_up_scrap_plate (Q5 b) | High | M |
 | 10 | lb_11 | The Ones Who Flew **(C-03)** | B&D | glass_coast_e1 (north shore) | lb_rotor, lb_kite, lb_flak_net | High | M |
 | 11 | lb_12 | The Second Drift | B&D | ash_reckoning (coast) | lb_second_drift; lb_up_grapple (Q5 b) | High | M |
 | 12 | lb_04 | The Banner (built, finale) | B&D | ash_reckoning | (finale) | Peak | built |
@@ -261,11 +244,12 @@ Mix: B&D 6 (01, 05, 02, 11, 12, 04), D/E 4 (07, 08, 10, 03), CMD 2 (06, 09).
   stand and fight at the Flat (alternative B, a defend mission; Tindall's line in the ending changes).
 - **lb_09 Strangers with Loudspeakers.** Directorate agitprop crawlers are on the dunes, telling the caravans to register for
   service. Buggies and harpoon wagons hunt them before they reach the stranded rigs; hidden bonus: bring one in intact and retune it.
-  Mirror of dir_10.
-- **lb_10 The Platform.** Back at Tern Point, where it began. The Directorate wants the dead locomotives' cores; an Authority
-  column comes to clear the railhead (mirror of auth_10). Hold the platform on two fronts with the first Rolling Forts. Old
+  Echo: the Directorate campaign mentions caravans hunting its crawlers (dir_10).
+- **lb_10 The Platform.** Back at Tern Point, where it began. The Directorate wants the dead locomotives' cores and comes with bores
+  from two directions (two fronts, Directorate only; the Authority's own Tern Point fight in auth_10 is a separate story, not this
+  battle). Hold the platform with the first Rolling Forts. Old
   Ottoline Vane speaks on the radio for the first time and says nothing about what she saw. Hidden bonus: the platform ledger.
-- **lb_11 The Ones Who Flew.** In summer an Expedition flight lifted people off a stranded rig (Kell's flight, mirror of exp_09).
+- **lb_11 The Ones Who Flew.** In summer an Expedition flight lifted people off a stranded rig (Kell's flight; an echo of exp_09, told here as a rumour).
   Calloway-Ross calls it theft and goes to take them back from the Expedition's north-shore beacon. First rotors and kites against
   gunships. **C-03:** take them back (this) or let them go and raid the fleet's stores instead (alternative B).
 - **lb_12 The Second Drift.** Seed the storm on the Expedition anchorage and raid it under cover, blinding the fleet before the
@@ -277,15 +261,15 @@ Mix: B&D 6 (01, 05, 02, 11, 12, 04), D/E 4 (07, 08, 10, 03), CMD 2 (06, 09).
 | # | Id | Title | Type | Map | Unlocks on win | Curve | Size |
 |---|---|---|---|---|---|---|---|
 | 1 | exp_01 | First Landing (built) | defend, build | glass_coast_e1 | exp_anchorage | Intro | built |
-| 2 | exp_05 | The South Coast **(Cut)** | CMD | tern_point | exp_dredge_works, exp_skimmer, exp_tank_farm | Low | S |
+| 2 | exp_05 | The South Coast | CMD | tern_point | exp_dredge_works, exp_skimmer, exp_tank_farm | Low | S |
 | 3 | exp_06 | Dredge Rights | B&D | tern_point | exp_hover_yard, exp_glide_tank, exp_hoverlander, exp_provision_store, exp_plotting_room (T2), exp_gun_battery | Low | M |
 | 4 | exp_02 | The Supply Line (built) | defend, B&D | glass_coast_e1 | exp_quay, exp_landing_craft, exp_launch, exp_shipyard, exp_destroyer, exp_sparker | Mid | built |
-| 5 | exp_07 | Convoy Weather | naval escort | glass_coast_e1 (west sea) | exp_minelayer, exp_picket (Q4 a); exp_up_sonar_nets (Q5 b) | Mid | M |
+| 5 | exp_07 | Convoy Weather | naval escort | glass_coast_e1 (west sea) | exp_minelayer, exp_picket (D-337 Q4); exp_up_sonar_nets (Q5 b) | Mid | M |
 | 6 | exp_08 | The Hum **(C-03)** | B&D raid | annex_foothills | exp_flight_deck, exp_jet | Mid+ | M |
 | 7 | exp_09 | Kell's Flight | escort / rescue | glass_coast_e1 (dunes) | exp_gunship, exp_sam, exp_skyhook | Mid | M |
 | 8 | exp_03 | The Fleet Reaches the Coast (built) | two fronts, defend | glass_coast_e1 | exp_core_hall (T3) and six more | Mid+ | built |
-| 9 | exp_10 | The Sealed Depot **(Cut)** | CMD | glass_coast_e1 (south dunes) | exp_barrage_lander, exp_repair_hover (Q4 a) | High | S |
-| 10 | exp_11 | The Recall **(C-03)** | defend | glass_coast_e1 | exp_canister_skiff, exp_gyro (Q4 a); exp_up_hardened_hulls (Q5 b) | High | M |
+| 9 | exp_10 | The Sealed Depot | CMD | glass_coast_e1 (south dunes) | exp_barrage_lander, exp_repair_hover (D-337 Q4) | High | S |
+| 10 | exp_11 | The Recall **(C-03)** | defend | glass_coast_e1 | exp_canister_skiff, exp_gyro (D-337 Q4); exp_up_hardened_hulls (Q5 b) | High | M |
 | 11 | exp_12 | The River Mouth | B&D, amphibious | ash_reckoning (south) | exp_up_guided_shells (Q5 b) | High | M |
 | 12 | exp_04 | The Fuel (built, finale) | B&D | ash_reckoning | exp_bomber, exp_salvo_array | Peak | built |
 
@@ -306,9 +290,9 @@ no-base hover raid to reach the exact D-030 mix.
   gets the Voice's real broadcasts).
 - **exp_09 Kell's Flight.** Air Marshal Kell takes a rescue flight into the Glass Coast against orders and finds people living there
   who were on no manifest (her secret, Q9 b). Skyhooks lift a stranded group out of a dune pocket while Left Behind bands and an
-  Authority patrol close in; gunships cover. Mirror of lb_11 (its aftermath).
+  Authority patrol close in; gunships cover. Echo: the caravans call it theft in lb_11.
 - **exp_10 The Sealed Depot.** Roque's sealed cores are failing faster than the specifications admit. Divers and Ironbound troopers
-  slip into the sealed Authority depot under a launch site (the one Fenn found, auth_09) for its pre-Exchange stock. No base.
+  slip into the sealed Authority depot under a launch site (an echo of auth_09: the depot Fenn found) for its pre-Exchange stock. No base.
 - **exp_11 The Recall.** A telex from home recalls the fleet. Strand does not forward it. While the tankers load, a Directorate
   dirigible raid hits the anchorage; hold it until the tankers sail. **C-03:** stay (this) or sail half the fleet home (alternative
   B: exp_12 and exp_04 are played with fewer ships; the ending's fleet slide changes).
@@ -318,6 +302,8 @@ no-base hover raid to reach the exact D-030 mix.
 ## 4 · Cross-faction timeline, recurring characters, finales
 
 ### 4.1 Timeline (one shared 2001, told four ways; positions line up because built missions sit at 1, 4, 8, 12)
+
+Each cell lists the mission id numbers in play order (e.g. Authority act 2 = play positions 4, 5, 6 = auth_02, auth_07, auth_08).
 
 | Act / season | Authority | Directorate | Left Behind | Expedition |
 |---|---|---|---|---|
@@ -329,21 +315,13 @@ no-base hover raid to reach the exact D-030 mix.
 The Expedition's telex dates run ahead of the other campaigns' seasons (exp_04 is dated September, lb_04 is winter); that stands
 under D-154 (parallel, no canon). New Expedition telexes take dates between the built ones.
 
-**Mirrored pairs (Q2 b): the same event, two sides, the same map.**
-| Event | Side A | Side B | Map |
-|---|---|---|---|
-| The survey convoy ambush | auth_01 | lb_01 | rustbelt_m2 (built) |
-| The mill town | auth_06 | dir_06 | rustbelt_mill |
-| Dray crosses | auth_07 | dir_07 (heard on the speakers) | rustbelt_m2 / annex_foothills |
-| Tern Point railhead | auth_10 | lb_10 | tern_point |
-| Loudspeaker crawlers on the dunes | dir_10 | lb_09 | tern_point / glass_coast_e1 |
-| Kell's flight and its aftermath | exp_09 | lb_11 | glass_coast_e1 |
-| Fenn's sealed depot | auth_09 | exp_10 | glass_coast_e1 |
-| The warheads and the tunnel head | auth_11 | dir_12 | ash_reckoning |
-
-Archive crossings: each pair's second mission can unlock the other side's entry (design 12 §2.3); the unlock map
-(docs/archive/m8_13_unlocks.md) moves leader secrets to the mission that tells them (e.g. `leader_auth_dray` from dir_04 to
-auth_07, `leader_exp_kell_secret` from lb_04 to exp_09). Proposal only; the Archive package decides.
+**Story echoes (D-337: parallel).** No battle is played from two sides. A campaign may mention another's events as a radio line,
+rumour, cameo or place: Dray's defection is a mission for the Authority (auth_07) and a speaker announcement for the Directorate
+(dir_07); Tern Point is a fight for both the Authority (auth_10) and the Left Behind (lb_10), but they are different fights with
+different enemies; Kell's flight is a mission for the Expedition (exp_09) and a grievance for the Left Behind (lb_11); Fenn's
+depot is found by the Authority (auth_09) and raided by the Expedition (exp_10), at different times. Maps are still reused across
+campaigns with different scripts (D-030). Archive crossings stay as design 12 §2.3 has them; moving leader secrets to the mission
+that tells them (e.g. `leader_auth_dray` from dir_04 to auth_07) is a proposal for the Archive package (docs/archive/m8_13_unlocks.md).
 
 ### 4.2 Recurring characters (existing names only)
 - **Authority:** Wrenfield (all 12, hero), Pell (teletypes in 06, 08, 10; Charter voice), Fenn (09 lead, 03 cameo), Dray (07 lead,
@@ -364,10 +342,10 @@ bonus (the Tern Point ledger, the spared battalion, the Kettle's speaker, Alders
 ## 5 · Build waves, cost and changes to built files
 - **Waves:** pilot (auth_07) → owner review → act 1 for all four (8 missions) → act 2 → act 3 → act 4. The three new maps come in
   the wave that first needs them (rustbelt_mill in act 1, annex_foothills in act 2, tern_point in act 1 for the Expedition).
-- **Size totals:** S 10, M 22, L 0, plus three maps (M each). The cut line removes 8 (7 S, 1 M).
+- **Size totals:** S 10, M 22, L 0, plus three maps (M each). All 32 are required (D-337).
 - **Built files later packages must touch (not this package):** each campaign list (order, `requires`, `still`), the `next` field
-  of each built mission, the Archive unlock map, optionally the auth_04 briefing line (Q3), and re-sweeps of built missions after a
-  leaked unlock (Q4 a).
+  of each built mission, the Archive unlock map, optionally the auth_04 briefing line, and re-sweeps of built missions after a
+  carried-over unlock (D-337 Q4).
 
 ## 6 · Pilot: auth_07 "The Defector"
 
@@ -375,8 +353,11 @@ bonus (the Tern Point ledger, the spared battalion, the Kettle's speaker, Alders
 base (so no economy tuning), about 150 lines of Lua. It shows all three things the expansion is for: a mission type the campaign
 lacks (no-base commando and escort), a story beat that is only hinted today (Dray), and an item introduced in story (the
 carrier and decon truck from auth_02's unlock list get a job; the Seismic Mortar is the reward). It also tests the slot-in rule
-between two built missions. Runner-up: lb_08 Kettle Flat (best Left Behind theme, but rig packing in a defend mission is more risk).
-The spec assumes Q3 (a) and Q4 (a); with Q4 (b) it unlocks nothing and nothing else changes.
+between two built missions. Runner-up: lb_08 Kettle Flat (play position 6) (best Left Behind theme, but rig packing in a defend mission is more risk).
+**Id and position (exact):** play position **5** of the Authority campaign (act 2, between auth_02 at position 4 and auth_08 at
+position 6); mission id **`auth_07`**, folder `data/missions/auth_07/`, locale prefix `a7.`. It follows the id rule in section 2
+(the third new Authority mission gets `_07`). In data/campaigns/authority.toml it is the 5th `[[missions]]` entry with
+`requires = ["auth_02"]`, and auth_08 later requires it. Dray's timing (act 2) and the carry-over unlock are owner decisions (D-337).
 
 ### 6.1 Map, players, zones
 - Map `rustbelt_m2.map.toml` (64x64; the river runs from the north-east corner to the south-west corner; road bridges near
@@ -395,7 +376,7 @@ Player, in `home`: 1 `auth_carrier` (tag `carrier`), 1 `auth_decon_truck`, 2 `au
 2 `auth_rocketeer`. Dray is not on the map at start. He is created as an `auth_engineer` (no weapon, matching "refuses to wear a
 weapon"; no hero type or new art) owned by slot 0, tag `dray`, when the player reaches `spoil`.
 `[starts_with]` = auth_02's starts_with plus its unlocks (the act-2 kit; nothing is buildable without a yard, so it only keeps the
-allow-list honest). `[unlocks_on_win] tech = ["auth_seismic_mortar"]` (Q4 a): Dray's log gives the tunnel bearings.
+allow-list honest). `[unlocks_on_win] tech = ["auth_seismic_mortar"]` (D-337 Q4): Dray's log gives the tunnel bearings.
 
 ### 6.3 Objectives
 - `reach` (primary): "Meet the defector at the spoil heaps". Target `spoil`.
@@ -476,7 +457,7 @@ RE: SHAFT FOUR SPOIL HEAPS, OPERATION OPEN DOOR
 - `a7.radio.win` (Wrenfield): "He is across. Get him a coat and a cup of something. Then we talk about tunnels."
 
 ## 7 · Notes for the lead
-- Lore inconsistency found while reading: docs/lore/leaders.md has Brigadier **Hester** Wrenfield ("Her own brother"), but
+- **OPEN for the owner.** Lore inconsistency found while reading: docs/lore/leaders.md has Brigadier **Hester** Wrenfield ("Her own brother"), but
   docs/lore/left_behind.md (faction_lb_authority) says "**His** brother" and "the Brigadier has not yet asked". The briefings and the
   auth campaign page use "her". A one-word lore fix for the owner to approve; lb_07 is written for "her".
 - Upgrade gating (Q5) is a code finding, read from `Simulation.CanResearch` and `MissionHost.IsTypeAllowed` (the Upgrade category
