@@ -1703,8 +1703,19 @@ public sealed class GameScreen : IScreen, IFocusPausable
             _selectedBuilding = b.Id;
             _selectedBuildingProduces = _sim.Rules.Buildings[b.TypeIndex].Produces is not null;
             _selectedBuildingType = b.TypeIndex;
+            FollowTabOf(b.TypeIndex);
             return;
         }
+    }
+
+    // S47 U-13 (cnc#25): selecting a production building opens the sidebar tab it feeds (Settings > Play options > Sidebar follows selection).
+    private void FollowTabOf(int buildingType)
+    {
+        if (!_s.Settings.SidebarFollowsSelection || _sim is null || _sidebar is null) return;
+        if (buildingType < 0 || buildingType >= _sim.Rules.Buildings.Count) return;
+        if (TabFollow.TabFor(_sim.Rules.Buildings[buildingType].Produces) is not { } tab) return;
+        if (tab == SidebarTab.Aircraft && !_sidebar.HasAircraftTab) return;
+        _sidebar.SelectTab(tab);
     }
 
     private void ClearBuildingSelection()
@@ -2016,6 +2027,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
         _selectedBuilding = f.Id;
         _selectedBuildingProduces = _sim.Rules.Buildings[f.TypeIndex].Produces is not null;
         _selectedBuildingType = f.TypeIndex;
+        FollowTabOf(f.TypeIndex);
         foreach (EntityId id in ids) if (id != f.Id) _marked.Add(id);
         Audio.AudioBootstrap.Director?.Notify(Audio.AudioEventKind.UnitSelect);
         if (twice) CentreOnSelection();

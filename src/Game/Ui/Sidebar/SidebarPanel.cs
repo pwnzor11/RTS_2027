@@ -134,6 +134,9 @@ public sealed class SidebarPanel : IUiRegion, IDisposable
     /// <summary>The selected tab.</summary>
     public SidebarTab Tab => _tab;
 
+    /// <summary>True while the Aircraft tab is shown (the player can build aircraft).</summary>
+    public bool HasAircraftTab => _hasAircraft;
+
     /// <summary>The layout computed by the last <see cref="Update"/>.</summary>
     public SidebarLayout Layout => _layout;
 

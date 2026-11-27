@@ -96,7 +96,8 @@ public sealed record Settings(
     bool TreadMarks = true,
     bool DebrisChunks = true,
     bool EffectBudget = true,
-    bool AdditiveGlow = true)
+    bool AdditiveGlow = true,
+    bool SidebarFollowsSelection = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -233,7 +234,8 @@ public sealed record Settings(
             root.TryGetValue("tread_marks", out object? tm) && tm is bool tmb ? tmb : d.TreadMarks,
             root.TryGetValue("debris_chunks", out object? dc) && dc is bool dcb ? dcb : d.DebrisChunks,
             root.TryGetValue("effect_budget", out object? eb) && eb is bool ebb ? ebb : d.EffectBudget,
-            root.TryGetValue("additive_glow", out object? ag) && ag is bool agb ? agb : d.AdditiveGlow);
+            root.TryGetValue("additive_glow", out object? ag) && ag is bool agb ? agb : d.AdditiveGlow,
+            root.TryGetValue("sidebar_follows_selection", out object? sf) && sf is bool sfb ? sfb : d.SidebarFollowsSelection);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -302,6 +304,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"effect_budget = {(EffectBudget ? "true" : "false")}"));
         sb.AppendLine("# Additive glow under explosions, muzzle flashes and fires (flashes also follow reduce_flashes).");
         sb.AppendLine(FormattableString.Invariant($"additive_glow = {(AdditiveGlow ? "true" : "false")}"));
+        sb.AppendLine("# Play options (S47 U-13): the sidebar tab follows a selected production building.");
+        sb.AppendLine(FormattableString.Invariant($"sidebar_follows_selection = {(SidebarFollowsSelection ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();
