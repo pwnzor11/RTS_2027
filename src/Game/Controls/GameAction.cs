@@ -165,6 +165,10 @@ public enum GameAction
     CycleProductionBuilding,
     /// <summary>QOL-17: toggle control groups that select every unit of their members' types (off by default).</summary>
     AutoTypeGroups,
+    /// <summary>S47 cnc#3: zoom in one step, about the middle of the map view.</summary>
+    ZoomIn,
+    /// <summary>S47 cnc#3: zoom out one step, about the middle of the map view.</summary>
+    ZoomOut,
     /// <summary>A43-QOL-14: place the structure or defence placed last once more (placement mode when one is finished, else queue one).</summary>
     PlaceLast,
     /// <summary>A43-QOL-15: switch repair on for every damaged own building (one ordinary Repair command each).</summary>

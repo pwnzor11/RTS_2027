@@ -2070,6 +2070,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         if (_sim is null) return;
         if (input.ConsumePressed(GameAction.CentreBase)) CentreCameraOnOwnBase();
         if (input.ConsumePressed(GameAction.CentreOnSelection)) CentreOnSelection();   // QOL-05
+        if (input.ConsumePressed(GameAction.ZoomIn)) ZoomByKey(1);    // S47 cnc#3: the wheel's job for a touchpad, about the middle of the map view
+        if (input.ConsumePressed(GameAction.ZoomOut)) ZoomByKey(-1);
         if (input.ConsumePressed(GameAction.LastAlert) && _alerts.JumpTarget(_source.Current.Tick) is { } alertAt) CentreCameraOn(alertAt);   // M11-10d
         bool ctrl = input.IsDown(Keys.LeftControl) || input.IsDown(Keys.RightControl);
         GameAction[] keys = { GameAction.Bookmark1, GameAction.Bookmark2, GameAction.Bookmark3, GameAction.Bookmark4 };
@@ -2083,6 +2085,12 @@ public sealed class GameScreen : IScreen, IFocusPausable
     }
 
     // QOL-05: the centre of the selected units, or of the selected building when no unit is selected.
+    private void ZoomByKey(int steps)
+    {
+        Rectangle view = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        _camera.ZoomBy(steps, view.Center);
+    }
+
     private void CentreOnSelection()
     {
         if (_sim is null) return;
