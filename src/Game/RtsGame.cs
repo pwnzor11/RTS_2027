@@ -207,20 +207,28 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
 
         if (input.ConsumePressed(GameAction.Screenshot)) _screenshotRequested = true;   // S47: taken at the end of this frame's draw
 
-        bool mutedNow = AudioSettings.MutedNow(_services.Settings, IsActive);   // S47 cnc#35: Settings > Play options > Mute in background
-        if (mutedNow != _mutedInBackground)
+        if (_services is { } svc)
         {
-            _mutedInBackground = mutedNow;
-            AudioSettings.Apply(_services.Audio, _services.Settings, mutedNow);
+            bool mutedNow = AudioSettings.MutedNow(svc.Settings, IsActive);   // S47 cnc#35: Settings > Play options > Mute in background
+            if (mutedNow != _mutedInBackground)
+            {
+                _mutedInBackground = mutedNow;
+                AudioSettings.Apply(svc.Audio, svc.Settings, mutedNow);
+            }
+
+            if (svc.Settings.VSync != _graphics.SynchronizeWithVerticalRetrace)   // S47 cnc#41: Settings > Play options > VSync, at once
+            {
+                _graphics.SynchronizeWithVerticalRetrace = svc.Settings.VSync;
+                _graphics.ApplyChanges();
+            }
+
+            _focusPause.Update(FocusPause.CountsAsActive(IsActive, svc.Settings), _screens);   // S19: a single-player game pauses while the window is in the background
+        }
+        else
+        {
+            _focusPause.Update(IsActive, _screens);
         }
 
-        if (_services.Settings.VSync != _graphics.SynchronizeWithVerticalRetrace)   // S47 cnc#41: Settings > Play options > VSync, at once
-        {
-            _graphics.SynchronizeWithVerticalRetrace = _services.Settings.VSync;
-            _graphics.ApplyChanges();
-        }
-
-        _focusPause.Update(FocusPause.CountsAsActive(IsActive, _services.Settings), _screens);   // S19: a single-player game pauses while the window is in the background
         _screens.Update(input, gameTime);
 
         _previousKeys = keys;
