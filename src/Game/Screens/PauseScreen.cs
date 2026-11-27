@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using Rts.Game.Input;
 using Rts.Game.Menu;
 using Rts.Game.Saves;
+using Rts.Game.Ui;
 
 namespace Rts.Game.Screens;
 
@@ -23,7 +24,8 @@ public sealed class PauseScreen : IScreen
     /// <param name="services">Shared services.</param>
     /// <param name="restart">Builds a fresh game screen for Restart.</param>
     /// <param name="save">What Save game writes to, or null when this game cannot be saved (the sandbox).</param>
-    public PauseScreen(GameServices services, Func<IScreen> restart, GameSaveTarget? save = null)
+    /// <param name="techTree">U-12: builds the tech-tree viewer for the Tech tree entry, or null for no entry.</param>
+    public PauseScreen(GameServices services, Func<IScreen> restart, GameSaveTarget? save = null, Func<IScreen?>? techTree = null)
     {
         _s = services;
         var items = new List<MenuItem> { new(() => "Resume", () => Choose(() => _s.Screens.Pop())) };
@@ -33,6 +35,7 @@ public sealed class PauseScreen : IScreen
             items.Add(new MenuItem(() => "Save game", () => Choose(() => _s.Screens.Push(SaveListScreen(save)))));
         }
         items.Add(new MenuItem(() => "Settings", () => Choose(() => _s.Screens.Push(new SettingsScreen(_s)))));
+        if (techTree is not null) items.Add(new MenuItem(() => UiText.Get(UiText.TechTreeMenu), () => Choose(() => { if (techTree() is { } view) _s.Screens.Push(view); })));   // U-12
         items.Add(new MenuItem(() => "Archive", () => Choose(() => _s.Screens.Push(new ArchiveScreen(_s)))));
         items.Add(new MenuItem(() => "Restart", () => Choose(() => Ask(ConfirmScreen.RestartTitle, ConfirmScreen.RestartText, ConfirmScreen.RestartYes, () => GameFlow.Restart(_s, restart)))));
         items.Add(new MenuItem(() => "Quit to menu", () => Choose(() => Ask(ConfirmScreen.QuitTitle, ConfirmScreen.QuitText, ConfirmScreen.QuitYes, () => GameFlow.QuitToMenu(_s)))));
