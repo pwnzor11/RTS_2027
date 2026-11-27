@@ -101,7 +101,8 @@ public sealed record Settings(
     bool BoxSelectFightersFirst = true,
     bool MuteInBackground = false,
     bool VSync = true,
-    int StartZoomPercent = 100)
+    int StartZoomPercent = 100,
+    bool PauseOnFocusLoss = true)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -254,7 +255,8 @@ public sealed record Settings(
             root.TryGetValue("box_select_fighters_first", out object? bf) && bf is bool bfb ? bfb : d.BoxSelectFightersFirst,
             root.TryGetValue("mute_in_background", out object? mb) && mb is bool mbb ? mbb : d.MuteInBackground,
             root.TryGetValue("vsync", out object? vs) && vs is bool vsb ? vsb : d.VSync,
-            SnapStartZoom(Int(root, "start_zoom_percent", d.StartZoomPercent, 50, 200)));
+            SnapStartZoom(Int(root, "start_zoom_percent", d.StartZoomPercent, 50, 200)),
+            root.TryGetValue("pause_on_focus_loss", out object? pf) && pf is bool pfb ? pfb : d.PauseOnFocusLoss);
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -333,6 +335,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"vsync = {(VSync ? "true" : "false")}"));
         sb.AppendLine("# Camera zoom when a match starts: 50, 100 or 200 percent.");
         sb.AppendLine(FormattableString.Invariant($"start_zoom_percent = {SnapStartZoom(StartZoomPercent)}"));
+        sb.AppendLine("# A single-player game pauses while the window is in the background (off: it keeps running).");
+        sb.AppendLine(FormattableString.Invariant($"pause_on_focus_loss = {(PauseOnFocusLoss ? "true" : "false")}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();

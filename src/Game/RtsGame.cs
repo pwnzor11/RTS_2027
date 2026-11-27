@@ -202,7 +202,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
             _graphics.ApplyChanges();
         }
 
-        _focusPause.Update(IsActive, _screens);   // S19: a single-player game pauses while the window is in the background
+        _focusPause.Update(FocusPause.CountsAsActive(IsActive, _services.Settings), _screens);   // S19: a single-player game pauses while the window is in the background
         _screens.Update(input, gameTime);
 
         _previousKeys = keys;
