@@ -26,6 +26,14 @@ Done on integ-s46 (D-328..D-330): U-06 (Alt-modifier bindings, Laptop keys prese
 after the mechanics wave (D-330: D-305 met on 512 games, campaign sweep 45/45; dir_02 tier 5 retuned). Still open: everything else below; the Field
 Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321); C-06 KeepAlive hook; owner tests O-01..O-03, O-08, O-10.
 
+## Status after session 47 (2026-11-26)
+Done on integ-s47 (D-331..D-338): C-06 (Player.KeepAlive; exp_02/03/04 reserve buildings removed), M-28 for AcquireTarget only (start-of-tick spatial
+index, about 30 % faster in a 900-unit test, no hash moved; splash and sonar/stealth/blackout/aura scans still walk all slots, row kept open as M-28b),
+U-12 (tech-tree viewer on `/` and the pause menu; three drill missions with medals), U-13 (15 of about 70 QoL items; the rest remain), A-08 (counter_minutes
+holds, YOUR ORDERS status, fight detail, `--random-counters`), A-09 (design only: docs/design/23_llm_build_plan.md), C-02 (outline docs/design/22 and the pilot
+auth_07; 31 missions remain, C-12), A-06 (layout-2 data keys and plan docs/balance/s47_layout2_plan.md; tuning in progress). Field Manual rebuilt
+(Marine 130, Glide Tank 900). New rows: T-11, T-12, C-12, M-28b. Still open: everything else below.
+
 ## 0. Before any of it: the balance gate and the freeze
 - **B-00 (first, small):** D-311 items 5-11 (production pause on a lost prerequisite, non-lethal Second Drift storm + no_build_threshold,
   Bore not a base, refused order keeps the queue, AI rebuild while broke, mop-up without respond_to_attacks, Directorate anti-air) live on
@@ -51,7 +59,7 @@ Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321)
 5. **Later, own sessions:** M-28 sim spatial index (D-314); C-02 campaign expansion, C-03 choice points, C-04 co-op; A-06 layout 2;
    A-08/A-09 LLM commander; U-12/U-13 more QoL; B-01..B-03 deeper balance (needs the freeze lifted).
 
-## 1. Mechanics / units (31 rows)
+## 1. Mechanics / units (32 rows)
 | id | what | where parked | evidence still not done | size | owner? |
 |---|---|---|---|---|---|
 | M-01 | Minelayer lays/sweeps sea mines | s18 item 26 (D-205), s19_text_changes.md "build later" 1; D-124 kept it ("cut last") | `TodayText.cs` exp_minelayer "cannot lay mines yet"; vehicles.toml:837 TODO M7-05; no mine type anywhere in src/Sim | L | yes: build or drop the unit |
@@ -82,11 +90,12 @@ Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321)
 | M-26 | Unit at 0 HP acts one more tick; depth charge cannot aim at a just-fired sub; stealth timer off by one | SIMCOMBAT-04/05/06 | not changed | S | no |
 | M-27 | Saves have no integrity hash or end marker | SIMCORE-04 | not changed | S | no |
 | M-28 | Sim spatial index (acquire, splash, sonar/stealth/blackout scans, aura recompute, path-cache invalidation by ore depletion, linear path queue) | D-314, M15-09, FOLLOWUP-06..10 | `[ ]` M15-09; AcquireTarget still walks all 4608 slots | L | no (own session, determinism risk) |
+| M-28b | Live-position index for the scans M-28 left out: splash, sonar, stealth, blackout, aura recompute (path-cache invalidation and the linear path queue stay as listed in M-28) | D-338 (2) | AcquireTarget uses the start-of-tick snapshot index (cee4661); these scans read live positions and still walk all 4608 slots | L | no (own session, determinism risk) |
 | M-29 | D-311 items 5-11 landing (SIMECON-01..04, SIMCORE-03 sim half) | M15-04 `[~]`, HANDOFF checkpoint | on `bal-s43` / `wp/a43-simB`, not on integ-s43 (no_build_threshold 64, no QueueStamp) | M | yes: land only if bal43 stays inside D-305; assumed Second Drift threshold 24 |
 | M-30 | `techs.toml` and `terrain.toml` still headed "placeholder fixture" and `test_armor_up`, `test_unlock_turret` unused | ROSTER-AD-09 | not changed | S | no |
 | M-31 | Stale TODO text in data that may already be built: Salvo Array "12 missiles over 6 s" (buildings.toml:1225), Carrier hangar (vehicles.toml:876), exit cells (buildings.toml:1031,1114) | data TODO M7-xx | verify, then delete the comments | S | no |
 
-## 2. Campaign / missions (11 rows)
+## 2. Campaign / missions (12 rows)
 | id | what | where parked | evidence still not done | size | owner? |
 |---|---|---|---|---|---|
 | C-01 | 18 ending slides have no pictures (dark fallback panel) | s18 game-screens.md:80; CAMPAIGN-07 | `data/images/endings/` does not exist (only `stills/`); EndingScreen.cs:97 | M (art) | yes (style) |
@@ -100,6 +109,7 @@ Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321)
 | C-09 | Mission AI scales with difficulty only in auth_04, exp_04, lb_04; dir_04 finale has no `AI.SetTier` | CAMPAIGN-06 | grep AI.SetTier in data/missions: 3 hits | S | yes |
 | C-10 | dir_04 zone and actor-tag names clash (`head`, `device`, `west_post`) | CAMPAIGN-08 | not changed | S | no |
 | C-11 | Telegram-style briefings and STOP field notes: both kept pending the owner's pick | D-284, ROADMAP M11-31 | docs/reviews/2026-11-19_text_audit.md holds both styles | S | yes |
+| C-12 | The 31 remaining expansion missions (32 in the outline minus the auth_07 pilot): build in waves per docs/design/22 §5 (act 1 of all four factions first, then acts 2, 3, 4) | C-02, D-333, D-337 | docs/design/22 outline and the auth_07 pilot only | L | yes (owner reviews each wave) |
 
 ## 3. AI (11 rows)
 | id | what | where parked | evidence still not done | size | owner? |
@@ -155,7 +165,7 @@ Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321)
 | N-04 | Discovery responder answers any source, 6x amplification, leaks Windows user name (NETLLM-09) | s43 not changed | | S | no |
 | N-05 | Repeated "Continue" after a desync writes unlimited report folders (NETLLM-10) | s43 not changed | | S | no |
 
-## 7. Tools / CI / repo (10 rows)
+## 7. Tools / CI / repo (12 rows)
 | id | what | where parked | evidence still not done | size | owner? |
 |---|---|---|---|---|---|
 | T-01 | `UnknownSourcesAreReported` still `[Fact(Skip=...)]` though PROVENANCE has 0 unknown (REPO-05, open) | s43 | AudioProvenanceTests.cs:120 | S | no |
@@ -168,6 +178,8 @@ Manual PDF needs a rebuild for the new Marine and Glide Tank costs; T-04 (D-321)
 | T-08 | Fourteen ROADMAP `[~]` rows (M4-16, M7-14, M13-13/16/19/22/23/26/28/29/37, M15-04 ...) never closed after D-310 freeze | ROADMAP | text says "laptop series pending" | S | yes (close by decision) |
 | T-09 | (done s43) README §5 accounting corrected | s43 README | fixed at wrap-up | S | no |
 | T-10 | Branches `integ-s40/41/42` still to delete | HANDOFF | | S | yes |
+| T-11 | Booklet `resolve_rules.py` has a stale key list: the s47 Field Manual rebuild reports 34 unknown keys | s47 booklet rebuild (abf9b4e) | tools/booklet resolve_rules.py own key list | S | no |
+| T-12 | Flaky `Net.Tests` UDP and discovery tests on the Windows runner (failed twice on docs-only pushes, passed on rerun) | s47 CI | Windows CI only; no repro on Linux | S | no |
 
 ## 8. Balance follow-ups (8 rows)
 | id | what | where parked | evidence still not done | size | owner? |
