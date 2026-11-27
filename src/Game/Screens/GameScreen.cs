@@ -2123,6 +2123,8 @@ public sealed class GameScreen : IScreen, IFocusPausable
         }
     }
 
+    private int _lastBase = -1;
+
     private void CentreCameraOnOwnBase()
     {
         if (_sim is null) return;
@@ -2133,6 +2135,18 @@ public sealed class GameScreen : IScreen, IFocusPausable
             centre = new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx);
             break;
         }
+
+        // S47 cnc#2: with more than one Construction Yard, Home steps from base to base.
+        var yards = new List<Vector2>();
+        int yardType = _sim.Rules.ResolveStartKit(_sim.Sim.Setup.FactionOf(Me)).Conyard;
+        if (yardType >= 0)
+            foreach (BuildingView b in _source.Current.Buildings)
+                if (b.Player == Me && !b.Ghost && b.TypeIndex == yardType)
+                    yards.Add(new Vector2((b.Cell.X + b.FootprintW / 2f) * Camera.CellPx, (b.Cell.Y + b.FootprintH / 2f) * Camera.CellPx));
+        Rectangle view = _sidebar?.Layout.MapView ?? new Rectangle(0, 0, _s.Viewport.Width, _s.Viewport.Height);
+        int at = BaseCycle.Next(yards, _camera.WorldFromScreen(view.Center), _lastBase);
+        _lastBase = at;
+        if (at >= 0) centre = yards[at];
 
         centre ??= Camera.CentreOf(_sim.Map.StartPositions[Me]);
         CentreCameraOn(centre.Value);
