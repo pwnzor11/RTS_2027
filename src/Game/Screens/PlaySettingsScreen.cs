@@ -27,6 +27,7 @@ public sealed class PlaySettingsScreen : IScreen
         var rows = new List<MenuItem>();
         Toggle(rows, "Sidebar follows selection", s => s.SidebarFollowsSelection, (s, v) => s with { SidebarFollowsSelection = v });
         Toggle(rows, "Box select favours fighters", s => s.BoxSelectFightersFirst, (s, v) => s with { BoxSelectFightersFirst = v });   // S47 cnc#8
+        Toggle(rows, "Mute sound in the background", s => s.MuteInBackground, (s, v) => s with { MuteInBackground = v });   // S47 cnc#35
         rows.Add(new MenuItem(() => "Back", Back));
         _panel = new MenuPanel("Play options", rows);
     }

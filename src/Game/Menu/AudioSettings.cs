@@ -12,18 +12,25 @@ public static class AudioSettings
     /// (<see cref="MonoGameAudio.MasterVolume"/>); other backends (the silent one) have only music and effects, so for them the master
     /// level is folded into those two (music and effects scaled by master/100), which keeps the loudness the player chose.
     /// </summary>
-    public static void Apply(IAudio audio, Settings settings)
+    public static void Apply(IAudio audio, Settings settings) => Apply(audio, settings, false);
+
+    /// <summary>S47 cnc#35: whether all sound is muted now: the setting is on and the window is in the background.</summary>
+    public static bool MutedNow(Settings settings, bool windowActive) => settings.MuteInBackground && !windowActive;
+
+    /// <summary>As <see cref="Apply(IAudio, Settings)"/>; with <paramref name="muted"/> the master level is 0 (sound off) without touching the saved volumes.</summary>
+    public static void Apply(IAudio audio, Settings settings, bool muted)
     {
+        int master = muted ? 0 : settings.MasterVolume;
         if (audio is MonoGameAudio mono)
         {
             mono.MusicVolume = settings.MusicVolume;
             mono.SfxVolume = settings.SfxVolume;
             mono.AmbienceVolume = settings.AmbienceVolume;
-            mono.MasterVolume = settings.MasterVolume;
+            mono.MasterVolume = master;
             return;
         }
-        audio.AmbienceVolume = settings.AmbienceVolume * settings.MasterVolume / 100;
-        audio.MusicVolume = settings.MusicVolume * settings.MasterVolume / 100;
-        audio.SfxVolume = settings.SfxVolume * settings.MasterVolume / 100;
+        audio.AmbienceVolume = settings.AmbienceVolume * master / 100;
+        audio.MusicVolume = settings.MusicVolume * master / 100;
+        audio.SfxVolume = settings.SfxVolume * master / 100;
     }
 }

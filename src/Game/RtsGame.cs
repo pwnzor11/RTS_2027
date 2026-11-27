@@ -27,6 +27,7 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
     private readonly string _dataDir;
     private readonly string _rulesDir;
     private readonly Settings _settings;
+    private bool _mutedInBackground;
     private readonly bool _demo;
     private readonly bool _direct;
     private readonly bool _empty;
@@ -187,6 +188,13 @@ public sealed class RtsGame : Microsoft.Xna.Framework.Game
         MouseState mouse = Mouse.GetState();
         var input = new InputFrame(keys, _previousKeys, mouse, _previousMouse, _typed);
         _typed.Clear();
+
+        bool mutedNow = AudioSettings.MutedNow(_services.Settings, IsActive);   // S47 cnc#35: Settings > Play options > Mute in background
+        if (mutedNow != _mutedInBackground)
+        {
+            _mutedInBackground = mutedNow;
+            AudioSettings.Apply(_services.Audio, _services.Settings, mutedNow);
+        }
 
         _focusPause.Update(IsActive, _screens);   // S19: a single-player game pauses while the window is in the background
         _screens.Update(input, gameTime);
