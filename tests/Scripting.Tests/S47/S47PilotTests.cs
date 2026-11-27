@@ -40,7 +40,7 @@ public sealed class S47PilotTests
         Assert.Equal(2, m.Def.Act);
         Assert.Equal("auth_08", m.Def.Next[0]);
         Assert.Equal(0, m.Sim.Players.Cash[0]);
-        Assert.Equal(600, m.Def.ParSeconds);   // placeholder until the sweep has measured it (D-289)
+        Assert.Equal(300, m.Def.ParSeconds);   // D-289: sw47a tier-3 median 103 s x 2.5, rounded up to a minute
         Assert.Equal(new[] { "auth_seismic_mortar" }, m.Def.UnlocksOnWin);
         var bot = new MissionBot(m);
         Assert.Equal(0, bot.Count("auth_conyard"));   // no base
