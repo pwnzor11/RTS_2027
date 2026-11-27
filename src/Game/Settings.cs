@@ -100,7 +100,8 @@ public sealed record Settings(
     bool SidebarFollowsSelection = true,
     bool BoxSelectFightersFirst = true,
     bool MuteInBackground = false,
-    bool VSync = true)
+    bool VSync = true,
+    int StartZoomPercent = 100)
 {
     /// <summary>The <c>UiSkin</c> value for faction skins.</summary>
     public const string UiSkinFaction = "faction";
@@ -128,6 +129,17 @@ public sealed record Settings(
 
     /// <summary>Highest camera scroll speed.</summary>
     public const int MaxScrollSpeed = 3000;
+
+    /// <summary>The start-zoom choices in percent (the camera's zoom levels).</summary>
+    public static readonly IReadOnlyList<int> StartZooms = new[] { 50, 100, 200 };
+
+    /// <summary>The start zoom closest to <paramref name="percent"/>.</summary>
+    public static int SnapStartZoom(int percent)
+    {
+        int best = StartZooms[0];
+        foreach (int z in StartZooms) if (Math.Abs(z - percent) < Math.Abs(best - percent)) best = z;
+        return best;
+    }
 
     /// <summary>The default settings.</summary>
     public static Settings Default { get; } = new();
@@ -241,7 +253,8 @@ public sealed record Settings(
             root.TryGetValue("sidebar_follows_selection", out object? sf) && sf is bool sfb ? sfb : d.SidebarFollowsSelection,
             root.TryGetValue("box_select_fighters_first", out object? bf) && bf is bool bfb ? bfb : d.BoxSelectFightersFirst,
             root.TryGetValue("mute_in_background", out object? mb) && mb is bool mbb ? mbb : d.MuteInBackground,
-            root.TryGetValue("vsync", out object? vs) && vs is bool vsb ? vsb : d.VSync);
+            root.TryGetValue("vsync", out object? vs) && vs is bool vsb ? vsb : d.VSync,
+            SnapStartZoom(Int(root, "start_zoom_percent", d.StartZoomPercent, 50, 200)));
     }
 
     /// <summary>The settings as TOML text.</summary>
@@ -318,6 +331,8 @@ public sealed record Settings(
         sb.AppendLine(FormattableString.Invariant($"mute_in_background = {(MuteInBackground ? "true" : "false")}"));
         sb.AppendLine("# Wait for the monitor refresh when drawing (off can tear the picture).");
         sb.AppendLine(FormattableString.Invariant($"vsync = {(VSync ? "true" : "false")}"));
+        sb.AppendLine("# Camera zoom when a match starts: 50, 100 or 200 percent.");
+        sb.AppendLine(FormattableString.Invariant($"start_zoom_percent = {SnapStartZoom(StartZoomPercent)}"));
         sb.AppendLine("# Pan the camera to a new mission objective's target (M11-05)");
         sb.AppendLine(FormattableString.Invariant($"camera_cue_on_new_objective = {(CameraCueOnNewObjective ? "true" : "false")}"));
         IReadOnlyList<(string Id, int Volume)> alerts = Alerts.Overrides();

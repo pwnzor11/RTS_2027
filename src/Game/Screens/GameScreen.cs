@@ -340,6 +340,7 @@ public sealed class GameScreen : IScreen, IFocusPausable
     {
         if (_lan is not null) _lan.SourceReplaced += OnLanSourceReplaced;   // M9-10
         if (_lan is not null) _lan.PingReceived += OnPingReceived;           // A43-QOL-09
+        _camera.SetZoomPercent(_s.Settings.StartZoomPercent);   // S47 cnc#42: Settings > Play options > Start zoom
         _s.Scene.Reset();   // S18 GAMEREND-01: the shared renderer must not remember the previous game's buildings
         if (_spectatorMode && _sim is not null)
         {

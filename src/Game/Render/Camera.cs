@@ -27,6 +27,15 @@ public sealed class Camera
     /// <summary>Current zoom as text for the HUD.</summary>
     public string ZoomLabel => ZoomLabels[_zoomIndex];
 
+    /// <summary>S47 cnc#42: the zoom level (50, 100 or 200 percent) a match starts at. A percent that is not a level takes the nearest one.</summary>
+    public void SetZoomPercent(int percent)
+    {
+        int best = 0;
+        for (int i = 1; i < ZoomLevels.Length; i++)
+            if (MathF.Abs(ZoomLevels[i] * 100f - percent) < MathF.Abs(ZoomLevels[best] * 100f - percent)) best = i;
+        _zoomIndex = best;
+    }
+
     /// <summary>Steps the zoom, clamped to the available levels. Positive zooms in.</summary>
     public void ZoomBy(int steps) => _zoomIndex = Math.Clamp(_zoomIndex + steps, 0, ZoomLevels.Length - 1);
 
