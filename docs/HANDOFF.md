@@ -11,7 +11,7 @@ format 16. Decisions up to D-339. OPEN_QUESTIONS: Q-94..Q-99 (all ⚪).
    USER_CHECKS + Field Manual rebuild (ash resist shows on Authority infantry pages). Otherwise re-screen the failing piece (s47 method).
 2. **Glass Coast Directorate v Expedition (30 %)** and **Mountains Authority v Directorate (35 %)**: new levers (s47 findings: map keys move the
    Expedition everywhere; try Directorate anti-hover or Glass-specific shallow/dune keys).
-3. **Layout 2 R0 baseline** on the landed data (docs/balance/s47_layout2_plan.md series: 24 rows x 128 games), then the S1/I1 variants.
+3. **Layout 2 R0 baseline** on the landed data (docs/balance/s47_layout2_plan.md series: 24 pairing rows x 128 games + 16 mirror rows), then the S1/I1 variants.
 4. **Campaign wave 1 (C-12)**: owner answers Q-94..Q-99 first; then build the next missions per docs/design/22 §5 (Sonnet helpers, one mission each,
    the auth_07 package as the template), re-sweep after each wave (D-337 carry-over).
 5. Smaller: M-28b live-position index (splash, scans), T-11 booklet key list, T-12 flaky net tests, the drill_hold and auth_07 play-check results.
@@ -27,7 +27,7 @@ format 16. Decisions up to D-339. OPEN_QUESTIONS: Q-94..Q-99 (all ⚪).
 - Play-checks: USER_CHECKS sessions 44-47 (drills, tech tree `/`, QoL keys, auth_07, Field Manual pages); answer Q-94..Q-99 (campaign outline
   Q5-Q9 and the Wrenfield lore conflict); confirm D-338 (wave-1 choices) and, once landed, D-339.
 - Earlier: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; auth_01 voice line says "Refinery"; D-321 LFS migration.
-- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, wp/s46-keys, integ-s47 (after merge), and any s40-s45 leftovers.
+- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, integ-s47 (after merge), and any s40-s45 leftovers.
 
 ## How to run this session
 - Session 47 lessons:

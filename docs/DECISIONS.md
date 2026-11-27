@@ -2471,7 +2471,7 @@ followed by a campaign re-sweep and tier retunes. Outline Q5-Q9 and the Wrenfiel
 
 ### D-338 · 2026-11-26 · Session 47: wave 1 choices (assumed — confirm)
 **Decision:** (1) Player.KeepAlive is stored in bit 1 of the players part's Defeated byte (no new part; SaveVersion stays 16); exp_02, exp_03,
-exp_04 drop their hidden reserve buildings for Player.KeepAlive (those were power plants / a reactor vent; re-swept). (2) M-28: the spatial index
+exp_04 drop their hidden reserve buildings for Player.KeepAlive (those were a power plant, a bunker and a reactor vent; re-swept). (2) M-28: the spatial index
 covers AcquireTarget only (start-of-tick snapshot); splash and sonar/stealth/blackout/aura scans keep the full walk (they read live positions);
 no hash moved. (3) Keys: zoom out `[`, zoom in `\`, cycle selected types backquote, screenshot PrintScreen, full screen Alt+Enter, tech tree `/`.
 (4) Drill medal limits: build order 120/165/240 s; hold the line lost ≤4/6/9; raid 95/130/190 s keeping 5/4/3 of 6. (5) auth_07: spec numbers
@@ -2485,6 +2485,6 @@ order status near = 5 cells, failed = army under 40 % of launch value or no arri
 Authority v Directorate); Rust Belt `rivers` 1 -> 0 and `ocean_width` 0 -> 2 (an Expedition sea edge; Rust Belt's four out-of-band rows).
 Lives on branch `bal-s47` with the re-pinned map hashes and WaveCommit game; NOT on main until the decide (job f1, 512 games) and the campaign
 sweep (sw47b) pass. Glass Coast Directorate v Expedition (30 %) has no fix yet. **Why:** paired screens s1b-s5 (docs/balance/s47_balance.md):
-r19 put all six Rust Belt rows inside 44-58 on 128 games; a15 lifted ash Authority v Directorate by +11.5. **Alternatives:** map-only Ash
+r19 put all six Rust Belt rows inside 44-58 on 96-128 games; a15 lifted ash Authority v Directorate by +11.5. **Alternatives:** map-only Ash
 changes (rough, rock: no effect); Glass ocean 0 (Expedition too weak); Directorate rockets v ships (no effect). **Status:** pending decide;
 assumed — confirm if landed.
