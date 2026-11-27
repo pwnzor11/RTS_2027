@@ -1,0 +1,172 @@
+# Authority 07: The Defector (S47 pilot of the campaign expansion, D-333/D-337; design 22 section 6). Play position 5 of the Authority campaign.
+# No base: bring a sealed carrier column to the Shaft Four spoil heaps, pick up Lieutenant Dray, and get him home alive.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1] (all `(tune)`). Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "The Defector"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 2
+# D-289: bot tier-3 median win x 2.5. Placeholder until the 12-seed sweep has measured it.
+par_seconds = 600  # PENDING par from sweep
+faction = "authority"
+next = "auth_08"
+locale = "locale.toml"
+
+[starts_with]
+# auth_02's starts_with plus its unlocks (the act-2 kit). Nothing is buildable without a yard; this only keeps the allow-list honest.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier"]
+
+[unlocks_on_win]
+# D-337 Q4: Dray's log gives the tunnel bearings.
+tech = ["auth_seismic_mortar"]
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 0
+# Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier"]
+
+[[players]]
+slot = 1
+name = "Directorate"
+role = "ai"
+team = 1
+cash = 1500
+faction = "directorate"
+
+[zones.home]
+rect = [2, 2, 14, 12]
+
+[zones.junction]
+rect = [35, 13, 44, 23]
+
+[zones.bridge_ne]
+rect = [44, 16, 49, 21]
+
+[zones.bridge_sw]
+rect = [14, 41, 20, 47]
+
+# Dray's hiding place, south-east bank of the river.
+[zones.spoil]
+rect = [38, 28, 44, 33]
+
+# Hidden bonus: the culvert at the south-east end of the south-west bridge.
+[zones.culvert]
+rect = [20, 44, 24, 48]
+
+[zones.ambush_ne]
+rect = [48, 20, 54, 26]
+
+[zones.enemy_base]
+rect = [52, 52, 62, 62]
+
+[zones.spawn_e]
+rect = [62, 26, 63, 34]
+
+[zones.spawn_s]
+rect = [30, 62, 40, 63]
+
+# The column: no yard, no factory. What it loses stays lost.
+
+[[actors]]
+type = "auth_carrier"
+player = 0
+cell = [13, 7]
+tag = "carrier"
+
+[[actors]]
+type = "auth_decon_truck"
+player = 0
+cell = [13, 9]
+tag = "decon"
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [12, 5]
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [13, 5]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 6]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [11, 6]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [11, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 8]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [11, 8]
+
+[[actors]]
+type = "auth_marksman"
+player = 0
+cell = [9, 6]
+
+[[actors]]
+type = "auth_marksman"
+player = 0
+cell = [9, 7]
+
+[[actors]]
+type = "auth_rocketeer"
+player = 0
+cell = [9, 8]
+
+[[actors]]
+type = "auth_rocketeer"
+player = 0
+cell = [9, 9]
+
+# The Directorate Shaft Four base, reused from auth_02 (it stays home; the script sends everything else), and a hatch by the spoil heaps.
+
+[[actors]]
+type = "dir_shaft"
+player = 1
+cell = [58, 58]
+tag = "enemy_shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 1
+cell = [54, 58]
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 1
+cell = [58, 54]
+
+[[actors]]
+type = "dir_hatch"
+player = 1
+cell = [44, 36]
+tag = "spoil_hatch"

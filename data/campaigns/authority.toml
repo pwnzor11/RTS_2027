@@ -12,10 +12,16 @@ id = "auth_02"
 still = "still_authority_act2"
 requires = ["auth_01"]
 
+# S47 pilot (D-333, D-337): "The Defector" is play position 5 of the 12-mission plan; with only five Authority missions built it sits between
+# auth_02 and auth_03 (the list order is the play order). auth_08 will require it later.
+[[missions]]
+id = "auth_07"
+requires = ["auth_02"]
+
 [[missions]]
 id = "auth_03"
 still = "still_authority_act3"
-requires = ["auth_02"]
+requires = ["auth_07"]
 
 [[missions]]
 id = "auth_04"

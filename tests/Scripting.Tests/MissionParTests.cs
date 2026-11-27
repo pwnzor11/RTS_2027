@@ -62,7 +62,7 @@ public sealed class MissionParTests : IDisposable
             Assert.True(par == 0 || par is >= 60 and <= 36000, $"{Path.GetFileName(folder)}: par {par}");
             if (par > 0) withPar++;
         }
-        Assert.Equal(12, withPar);
+        Assert.Equal(13, withPar);   // S47: 12 measured pars plus the auth_07 placeholder
     }
 
     [Fact]
