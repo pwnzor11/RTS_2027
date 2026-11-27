@@ -53,6 +53,7 @@ public static class MissionApiContract
         Add(ApiStatus.Implemented, "M11-05", "Objective.SetTarget", "Objective.ClearTarget");
         Add(ApiStatus.Implemented, "S19", "Actor.Charged", "Actor.DelayCharge", "Actor.CountPacked");
         Add(ApiStatus.Implemented, "S45", "Trigger.OnSuperweaponFired");
+        Add(ApiStatus.Implemented, "S47", "Player.KeepAlive", "Player.IsKeptAlive");
         return l;
     }
 }

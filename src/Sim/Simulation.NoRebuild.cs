@@ -85,7 +85,7 @@ public sealed partial class Simulation
         if (!Setup.NoRebuildDefeat) return;
         for (int p = 0; p < _players.Count; p++)
         {
-            if (_players.IsNeutral((byte)p) || _players.Defeated[p] || !_production.EverHadBase[p]) continue;
+            if (_players.IsNeutral((byte)p) || _players.Defeated[p] || !_production.EverHadBase[p] || _players.KeepAlive[p]) continue;   // S47 C-06
             if (HasRebuildLifeline((byte)p)) { _production.NoRebuildTicks[p] = 0; continue; }
             if (++_production.NoRebuildTicks[p] >= SimConstants.NoRebuildDefeatTicks) _players.Defeated[p] = true;
         }

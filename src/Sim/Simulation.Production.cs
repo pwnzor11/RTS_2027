@@ -629,7 +629,7 @@ public sealed partial class Simulation
         {
             if (_players.IsNeutral((byte)p) || _players.Defeated[p]) continue;
             if (has[p]) _production.EverHadBase[p] = true;
-            else if (_production.EverHadBase[p]) _players.Defeated[p] = true;
+            else if (_production.EverHadBase[p] && !_players.KeepAlive[p]) _players.Defeated[p] = true;   // S47 C-06: KeepAlive holds the player up
         }
     }
 

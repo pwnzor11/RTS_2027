@@ -77,6 +77,8 @@ public sealed partial class MissionHost
         NewApiTable(s, "Player",
             ("Cash", a => Num(_sim!.Players.Cash[PlayerArg(a, 0)])),
             ("Funds", a => Num(_sim!.Funds((byte)PlayerArg(a, 0)))),   // M8-17: Cash + Stored, read-only
+            ("KeepAlive", a => { _sim!.Players.KeepAlive[PlayerArg(a, 0)] = BoolArg(a, 1, "on"); return DynValue.Nil; }),   // S47 C-06: sim state, hashed and saved
+            ("IsKeptAlive", a => DynValue.NewBoolean(_sim!.Players.KeepAlive[PlayerArg(a, 0)])),
             ("AddCash", a =>
             {
                 int p = PlayerArg(a, 0);
