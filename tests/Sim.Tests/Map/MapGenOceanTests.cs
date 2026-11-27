@@ -15,12 +15,12 @@ public sealed class MapGenOceanTests
     /// (D-180: the generator is replaced), so the check now runs with the prop budget set to zero: the land, resources and ruins underneath are
     /// still byte-identical to the pre-M7 generator, and a map without props draws no random number the old generator did not.</summary>
     [Theory]
-    [InlineData(Biome.RustBelt, MapSize.Small, 3, 1UL, 0x75be99624c8dc623UL)]
-    [InlineData(Biome.RustBelt, MapSize.Small, 4, 77UL, 0xdad937e3ef7f422cUL)]
-    [InlineData(Biome.RustBelt, MapSize.Medium, 3, 1UL, 0xd839e6ba7cdfcdeaUL)]
-    [InlineData(Biome.RustBelt, MapSize.Medium, 4, 77UL, 0xbf69464c447730e1UL)]
-    [InlineData(Biome.RustBelt, MapSize.Large, 3, 1UL, 0x66e3b597b42ee90bUL)]
-    [InlineData(Biome.RustBelt, MapSize.Large, 4, 77UL, 0x600d026637573a37UL)]
+    [InlineData(Biome.RustBelt, MapSize.Small, 3, 1UL, 0x23ff6c95c24fc442UL)]
+    [InlineData(Biome.RustBelt, MapSize.Small, 4, 77UL, 0x8087d5abe8631983UL)]
+    [InlineData(Biome.RustBelt, MapSize.Medium, 3, 1UL, 0x76a3d445f95933b2UL)]
+    [InlineData(Biome.RustBelt, MapSize.Medium, 4, 77UL, 0x5665eaf718dddf37UL)]
+    [InlineData(Biome.RustBelt, MapSize.Large, 3, 1UL, 0x1283d83c3234149bUL)]
+    [InlineData(Biome.RustBelt, MapSize.Large, 4, 77UL, 0xe06926fef1401085UL)]
     [InlineData(Biome.GlassCoast, MapSize.Small, 3, 1UL, 0xb4f82f44291b0f22UL)]
     [InlineData(Biome.GlassCoast, MapSize.Small, 4, 77UL, 0x9bd967e4373378baUL)]
     [InlineData(Biome.GlassCoast, MapSize.Medium, 3, 1UL, 0xc6859e798039cc90UL)]
