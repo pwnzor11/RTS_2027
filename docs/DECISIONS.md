@@ -2504,3 +2504,24 @@ Archive entry unlocked by the mission states them. **Why:** owner, all as recomm
 ### D-342 · 2026-11-27 · Session 48: Wrenfield is Hester, "her brother" (Q-99); D-338 confirmed
 **Decision (owner):** Brigadier Hester Wrenfield stays a woman; docs/lore/left_behind.md's "His brother" becomes "Her brother". D-338 (session 47
 wave-1 choices) is confirmed. **Why:** owner; briefings, the campaign page and lb_07 already say "her".
+
+### D-343 · 2026-11-28 · Session 48: campaign wave 1 and the upgrade gate as built (assumed — confirm)
+**Decision:** (1) Q-94 gate: research in a mission needs the upgrade id in the player's allow-list (Simulation.CanResearch asks the
+UnlockFilter; MissionHost maps the Upgrade category); every mission whose player can own a researching building lists all of its faction's
+upgrade ids, so nothing is locked yet; the "(Q5 b)" reward upgrades come off the earlier missions when their reward missions are built. AI
+players are never restricted. (2) Eight act-1 missions built per docs/design/22 §3 (play positions 2 and 3 of every campaign: auth_05, auth_06,
+dir_05, dir_06, lb_05, lb_06, exp_05, exp_06) on rustbelt_m2 and the two new maps rustbelt_mill and tern_point (script-built, zones in the map
+header comments: the map format has no zones). All unit counts, timers, cash and story details are the helpers' first guesses (listed in each
+mission's comments); pars from sweep sw48b (D-289). (3) Every built mission's `next` follows the campaign play order (auth_02 now names auth_07).
+(4) dir_05 tiers 4-5 lightened (no jeep; guards and alarms one step above tier 3): it lost 12/12 at tier 5 and at tier 4. (5) New Archive leader
+entry "Marrow Tindall" (text copied from docs/lore/left_behind.md), unlocked by lb_05. (6) Field Manual: units with a non-zero ash resist show
+"Ash resist N%". **Why:** owner's go for the session-48 plan (C-12 wave 1). **Status:** assumed — confirm (owner play-checks, USER_CHECKS s48).
+
+### D-344 · 2026-11-28 · Session 48: no further per-map balance change this session (B-01)
+**Decision:** keep f1 as the shipped balance. Directorate damage against ships (s48a d1-d3) does not move Glass Coast Directorate v Expedition;
+Authority infantry ash resist moves Authority v Directorate on every map, not only Ash Plains (750: about +1 on Ash; 825-850: Ash about 44-46
+but Glass about 68-69 and Rust Belt about 68; 900: +18 to +24 everywhere). Two rows stay below the 35-65 aim (Glass Coast Dir v Exp 30.0,
+Ash Plains Auth v Dir 32.0); D-305 (40-60 pooled, 25-75 per row) is met. **Why:** every lever tried traded the two low rows for two high ones.
+**Alternatives:** ash resist 825 (Auth v Dir pooled about 59, two rows above 65); remove the Glass ocean (s47 gc2: the other Glass Expedition rows
+go to about 71-74). Next levers need a new kind of key (per-biome unit or AI keys), see OPEN_QUESTIONS Q-101. **Status:** decided by the lead
+within the owner's gate; the owner may ask for the 825 trade.

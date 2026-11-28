@@ -859,3 +859,19 @@ prince mostly busy with whisper, so the cluster ran on the Pis (~1 piece/min). T
 the binaries). A 2-CPU build sat Pending behind series pods (deadlock again); an 800m build worked. Windows CI Net.Tests UDP/discovery tests
 failed twice on docs-only pushes and passed on rerun (T-12).
 **Next session should:** HANDOFF "Start here".
+
+## Session 48 · 2026-11-27/28 (f1 landed; Q-94..Q-99 answered; campaign wave 1 = act 1 of all four; upgrade gate; M-28b; maps)
+**Outcome:** read the f1 decide (all six pairings 40-60, all 24 rows 25-75) and sweep sw47b (D-222 met): landed by PR #131 (D-340). Owner answered
+Q-94..Q-99 (D-341: upgrades gated as mission rewards, three new maps, choice slots at 6 and 10, keep open_after, secrets hinted; D-342: Hester
+Wrenfield, "her brother"; D-338 confirmed). Built on integ-s48: the Q-94 upgrade gate; maps rustbelt_mill and tern_point; the eight act-1 missions
+(auth_05 Hatch Country, auth_06 The Mill Town, dir_05 Night Shift, dir_06 The Assembly Bore, lb_05 Under One Banner, lb_06 Salvage Rights, exp_05
+The South Coast, exp_06 Dredge Rights) wired into all four campaigns, swept (sw48b) and given pars; M-28b live spatial index (splash, stealth,
+blackout, sonar; no hash moved); T-11 booklet key list; Field Manual rebuilt; Archive entry Marrow Tindall. Balance screens s48a/s48b found no
+lever for the two rows below 35 (D-344, Q-101). Layout 2 R0 baseline (l2r0b, l2m) running on the cluster at hand-off.
+**Decisions:** D-340..D-344. **Questions:** Q-100 (lb_06 goal), Q-101 (balance aim).
+**Helpers:** 15 packages (Sonnet x13: gate, two maps, eight missions in seven packages, M-28b, T-12; Haiku x2: T-11, booklet). One server restart
+(the Expedition helper resumed by itself). Cluster: ~4 000 balance games (s48a, s48b), 72 sweep pieces, layout-2 series ongoing.
+**Problems / notes:** parallel mission packages collide in the pinned lists and CampaignWalks.cs: the generic "keep both" conflict resolution
+interleaved bot-walk methods twice; rebuilt them from each branch (see HANDOFF lessons). The T-12 test fix failed on Windows CI and was reverted.
+The gate helper ran no Game.Tests; three Game tests needed the upgrade ids. A build pod deadlocked behind its own sweep again (paused the sweep).
+**Next session should:** HANDOFF "Start here".

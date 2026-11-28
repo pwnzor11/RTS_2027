@@ -31,10 +31,16 @@ Reading: (1) the Glass Coast Directorate v Expedition gap is not about Directora
 moved it in s47 was removing the Glass ocean (gc2, +28), which also lifts the other two Glass Expedition rows by ~19 (too far). It needs a new kind of
 lever: candidates for the next round are a Glass-only Expedition cost (landing craft / hover yard) or a Directorate anti-hover change aimed at Light
 armour on Glass only (no such per-biome key exists today). (2) Authority ash resist has a cliff between 750 and 900 and moves Authority v
-Directorate on every map, not only Ash Plains. Round 2 (job **s48b**, 825 and 850 on the four Authority v Directorate rows) was running at
-hand-off; a value that brings Ash to ~40 while keeping Glass <= 65 would also move the pooled pairing toward 50.
+Directorate on every map, not only Ash Plains. Round 2 (job **s48b**, stopped at 43 of 64 pieces): 825 gave Ash 46, Glass 69, Mountains 55, Rust Belt 68 (est. 512);
+850 gave Ash 44, Glass 68. No value lifts Ash without pushing Glass and Rust Belt Authority v Directorate past 65: no change (D-344, Q-101).
 
 ## Layout 2 R0 (A-06): running
 Jobs **l2r0b** (24 pairing rows x 16 chunks, 128 games per row) and **l2m** (16 mirror rows x 8 chunks) on build d16844b (main + f1 data).
 Script `k3s-cluster/claude/rts/s48/l2r0.sh`, `l2m.sh`; outputs `/work/out/l2r0b`, `/work/out/l2m`. Tally with the s46/s47 tally scripts
 (`/work/in/s41/tally41.py /work/out/l2r0b 0 15`).
+
+## Campaign sweep sw48b (build 8aaacb4, the eight wave-1 missions, 12 seeds per tier)
+All tier 1 and tier 3 cases 12/12. Tier 5: auth_05, auth_06, exp_05, exp_06, lb_05, lb_06 12/12 (too easy for the D-234 4-9 window, meets D-222),
+dir_06 4/12, dir_05 0/12 -> retuned (tiers 4-5 lighter, no jeep): 12/12 at tiers 1 and 5 on the cloud box (the mission is seed-independent).
+Pars (D-289, tier-3 median x 2.5): auth_05 240, auth_06 720, dir_05 300, dir_06 1680, lb_05 360, lb_06 120, exp_05 120, exp_06 720 s.
+Built missions were not re-swept: the Q-94 gate leaves their allow-lists as before.

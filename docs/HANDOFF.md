@@ -1,41 +1,59 @@
-# Handoff: Session 48 — read the f1 decide, land or re-screen per-map balance; layout 2 baseline; then campaign wave 1
-Last commit: `docs: Session 47 handoff` on `integ-s47` (PR to main, merged by the lead once Windows CI is green). Balance candidate on branch `bal-s47` (not merged). Laptop folder: `git checkout main; git pull`.
-Where things stand: session 47 built every M16-06 item's first slice (D-331..D-338): Player.KeepAlive, the AcquireTarget spatial index, a tech-tree
-viewer and drills, 15 QoL items, LLM counter holds, the campaign outline with the pilot auth_07, layout-2 keys. Per-map balance candidate f1
-(D-339) is on `bal-s47`; its decide (job f1, 15 rows x 512 games) and campaign sweep (sw47b) were running at hand-off. Save format 16, replay
-format 16. Decisions up to D-339. OPEN_QUESTIONS: Q-94..Q-99 (all ⚪).
+# Handoff: Session 49 — owner checks of campaign wave 1, then act 2 (annex_foothills) and the layout-2 read
+Last commit: `docs: Session 48 handoff` on `integ-s48` (PR to main, merged by the lead once Windows CI is green). Laptop folder: `git checkout main; git pull`.
+Where things stand: session 48 landed f1 (D-340, PR #131) and built campaign wave 1 on integ-s48: the Q-94 upgrade gate, maps rustbelt_mill and
+tern_point, the eight act-1 missions (play positions 2 and 3 of every campaign), pars from sweep sw48b; M-28b; T-11; the Field Manual rebuilt.
+Save format 16, replay format 16. Decisions up to D-344. OPEN_QUESTIONS: Q-100 (lb_06 goal, 🟡), Q-101 (balance aim, ⚪).
 
-## Start here (session 48; shown to the user as the plan; nothing starts until they say go)
-1. **Read f1 and sw47b** (docs/balance/s47_balance.md "Candidate f1"): write final47.py from s46 final46.py (f1 rows replace the c7 rows for the
-   12 Authority rows and 3 other Rust Belt rows). Land `bal-s47` (PR) only if six pairings 40-60, all rows 25-75, sw47b meets D-222; then
-   USER_CHECKS + Field Manual rebuild (ash resist shows on Authority infantry pages). Otherwise re-screen the failing piece (s47 method).
-2. **Glass Coast Directorate v Expedition (30 %)** and **Mountains Authority v Directorate (35 %)**: new levers (s47 findings: map keys move the
-   Expedition everywhere; try Directorate anti-hover or Glass-specific shallow/dune keys).
-3. **Layout 2 R0 baseline** on the landed data (docs/balance/s47_layout2_plan.md series: 24 pairing rows x 128 games + 16 mirror rows), then the S1/I1 variants.
-4. **Campaign wave 1 (C-12)**: owner answers Q-94..Q-99 first; then build the next missions per docs/design/22 §5 (Sonnet helpers, one mission each,
-   the auth_07 package as the template), re-sweep after each wave (D-337 carry-over).
-5. Smaller: M-28b live-position index (splash, scans), T-11 booklet key list, T-12 flaky net tests, the drill_hold and auth_07 play-check results.
+## Start here (session 49; shown to the user as the plan; nothing starts until they say go)
+1. **Owner review of wave 1** (USER_CHECKS session 48): play-check the eight missions, answer Q-100 and Q-101, confirm D-343/D-344. Retune what the
+   owner flags (one Sonnet helper per mission, the s48 brief docs/process/s48_mission_brief.md; re-sweep on the cluster). Too-easy tier 5 cases:
+   auth_05, auth_06, exp_05, exp_06, lb_05, lb_06 win 12/12 at tier 5 (meets D-222, not the D-234 4-9 window).
+2. **Layout 2 R0 read** (jobs l2r0b 24 rows x 128 games, l2m 16 mirror rows; build d16844b): tally per pairing and mirror start share
+   (docs/balance/s47_layout2_plan.md §4 gate), then the S1/I1 shell-mix and field variants.
+3. **Campaign wave 2 = act 2** (C-12): the annex_foothills map (96x96, mountains) first, then auth_08 (C-03 slot), dir_07, dir_08 (C-03), lb_07, lb_08
+   (C-03), exp_07, exp_08 (C-03) per docs/design/22 §3; reward upgrades come off the earlier missions' lists as each reward mission lands (Q5 b).
+   auth_07 `next = "auth_08"` points at it.
+4. Smaller: T-12 (a Windows-safe fix: the s48 attempt failed on CI), lb_06 per Q-100, M-28b aura recompute if wanted, per-biome keys (Q-101 c).
 
 ## Half-finished work
-- `bal-s47` (ea92bc5 + re-pin commit): candidate f1, tests green locally (Sim/Scripting/Net/AI/Llm/Tools/Game). Not merged.
-- Cluster jobs at hand-off: f1 (480 pieces, `k3s-cluster/claude/rts/s47/f1.sh`, out `/work/out/f1`), sw47b (144 pieces, out `/work/out/sw47b`).
-  l2r0 was deleted (re-run on landed data). Screen outputs `/work/out/{s1b,s2,s2loc,s3,s4,s5}`; table docs/balance/s47_screens.txt.
-- auth_07 `next = "auth_08"` points at a mission that does not exist yet (MissionLinksTests accepts it until auth_08 is written).
+- Cluster at hand-off: l2r0b and l2m (layout 2 R0) still running (`k3s-cluster/claude/rts/s48/l2r0.sh`, `l2m.sh`; out `/work/out/l2r0b`, `/work/out/l2m`).
+  Screens s48a (complete), s48b (stopped), sweep sw48b (complete; dir_05 t5 re-checked on the cloud box after the retune).
+- lb_06's bank goal is met by ash harvesting (Q-100). tern_point/rustbelt_mill zones live in the map header comments only (no map-file zones).
+- Locale prefix of lb_06 is `lb6.` (design 22 §2 says `l6`); harmless, rename if touched again.
 
 ## Waiting on the user
-- Power-cycle **huntsman** (SSH times out; NotReady since s46). queen stays cordoned for Tdarr until you say.
-- Play-checks: USER_CHECKS sessions 44-47 (drills, tech tree `/`, QoL keys, auth_07, Field Manual pages); answer Q-94..Q-99 (campaign outline
-  Q5-Q9 and the Wrenfield lore conflict); confirm D-338 (wave-1 choices) and, once landed, D-339.
+- Power-cycle **huntsman** (still NotReady). queen stays cordoned for Tdarr until you say.
+- Play-checks: USER_CHECKS sessions 44-48; answer Q-100, Q-101; confirm D-343, D-344.
 - Earlier: M9-15 two-PC LAN test; M7-14 Expedition play-test; M10-27 voice log; auth_01 voice line says "Refinery"; D-321 LFS migration.
-- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, integ-s47 (after merge), and any s40-s45 leftovers.
+- **Delete branches** (the session's GitHub access cannot): integ-s46, bal-s46, integ-s47, bal-s47, land/s48-w1, integ-s48 (after merge), and the
+  wp/s48-* helper branches if any were pushed (none were).
 
 ## How to run this session
+- Session 48 lessons:
+  - **Parallel mission packages and shared test files:** a generic "keep both sides" conflict merge interleaves C# methods (CampaignWalks.cs
+    bot walks) and duplicates dictionary rows. Merge the list files with an ordered-union script, but for CampaignWalks.cs take the
+    integration branch's file and inject each new mission's pieces (Campaigns row, TickLimit row, switch case, walk method extracted from its
+    own branch by brace matching). Check each walk method is byte-identical to its branch before building.
+  - Pinned counts that every package bumps (MissionParTests withPar) are better as computed counts (S48: 13 + existing wave-1 folders).
+  - Packages that change shared data (the gate helper added upgrade ids to every mission) must run Game.Tests too: three Game tests and every new
+    mission's allow-list test pinned the old lists.
+  - A helper wiring mission N+1 before mission N exists cannot use `requires = ["N"]` (the campaign loader rejects unknown ids): tell it to require
+    the built predecessor and fix the chain at merge.
+  - **Correction to a session-47 lesson:** the layout-1 ocean edge is drawn whenever `ocean_width` > 0, in every game (ProceduralBuilder.Build);
+    the Expedition only adds the extra sea skin behind the starts. Rust Belt now has a sea ring in all games (f1).
+  - Authority ash resist moves Authority v Directorate on every map with a cliff between 750 and 900; Directorate anti-ship damage does not move
+    Glass Coast Directorate v Expedition (s47 and s48).
+  - Story missions are mostly seed-independent for the bot (identical win ticks over 12 seeds): a 12-seed sweep is 12 copies; a single seed run
+    on the cloud box answers a tier question in seconds (an inline probe test that prints Won/Tick/Outcome per tier found dir_05's tier-4 cliff).
+  - Build pods still deadlock behind sweep pods waiting for them: submit the build with `--arch any --cpu 800m`, and if it stays Pending set the
+    sweep's parallelism to 0 until the build runs (a lowered parallelism kills running pods; they rerun).
+  - Windows CI: a virtual-clock rewrite of the UDP tests (T-12) passed 20x on Linux but failed on Windows, including an untouched handshake test;
+    reverted. Prove Net test changes on Windows CI before merging them.
 - Session 47 lessons:
   - **biomes.toml is read beside the binaries** (BiomeCatalog walks up from AppContext.BaseDirectory). A map variant must get its own bin folder
     with its own `data/mapgen` (s47 runner `s1b.sh` pattern: copy the bin's files, symlink every data folder except mapgen); rules data still comes
     from the working directory. Check a new kind of variant moves something before a long screen.
-  - `ocean_width` 1, 2 and 3 are the same map at size 96; ocean edges exist only when an Expedition side plays, so an ocean width changes only
-    that faction's rows (a clean per-faction map lever).
+  - `ocean_width` 1, 2 and 3 are the same map at size 96. (Corrected in s48: the ocean edge exists in every game when ocean_width > 0.)
   - The cloud box plays ~9 Pi slots' worth (2 cores, ~140 s per 8-seed piece): build the same commit there (`dotnet build src/Tools -c Release`,
     24 s) and run a share of a screen with the same patch (`/home/claude/loc/mk.py`, `run1.sh`); upload md files through the laptop
     (device_commit_files into k3s-cluster, then `kjob.py put`) and pair on the toolbox.

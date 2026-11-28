@@ -338,6 +338,7 @@ exp_12 takes exp_04's landing. Suggestion for a later text package: one new cond
 bonus (the Tern Point ledger, the spared battalion, the Kettle's speaker, Aldersey's log), owner-approved text (D-086).
 
 ## 5 · Build waves, cost and changes to built files
+- **Status (session 48):** wave 1 (act 1 of all four, with rustbelt_mill and tern_point) is built and swept (D-343). Owner answers Q5-Q9: D-341.
 - **Waves:** pilot (auth_07) → owner review → act 1 for all four (8 missions) → act 2 → act 3 → act 4. The three new maps come in
   the wave that first needs them (rustbelt_mill in act 1, annex_foothills in act 2, tern_point in act 1 for the Expedition).
 - **Size totals:** S 10, M 22, L 0, plus three maps (M each). All 32 are required (D-337).
