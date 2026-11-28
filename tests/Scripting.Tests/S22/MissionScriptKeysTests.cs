@@ -72,6 +72,8 @@ public sealed partial class MissionScriptKeysTests
     [InlineData("exp_04", "e4.finale", "e4.radio.finale")]
     [InlineData("dir_02", "d2.reserve2", "d2.radio.reserve2")]
     [InlineData("lb_01", "lb1.relief2", "lb1.radio.relief2")]
+    [InlineData("lb_05", "l5.muster", "l5.radio.muster")]
+    [InlineData("lb_05", "l5.answer", "l5.radio.answer")]
     [InlineData("lb_04", "lb4.landing2", "lb4.radio.landing2")]
     [InlineData("exp_03", "e3.auth2", "e3.radio.auth2")]
     [InlineData("exp_04", "e4.col2", "e4.radio.col2")]
