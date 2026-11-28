@@ -40,7 +40,7 @@ internal static class CampaignWalks
         ["authority"] = new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_02", "lb_03", "lb_04" },
-        ["expedition"] = new[] { "exp_01", "exp_05", "exp_02", "exp_03", "exp_04" },
+        ["expedition"] = new[] { "exp_01", "exp_05", "exp_06", "exp_02", "exp_03", "exp_04" },
     };
 
     /// <summary>All 17 mission ids, campaign by campaign (S47: the 16 built ones plus the pilot auth_07).</summary>
@@ -96,6 +96,7 @@ internal static class CampaignWalks
                 case "lb_04": Lb04(bot); break;
                 case "exp_01": Exp01(bot); break;
                 case "exp_05": Exp05(bot); break;
+                case "exp_06": Exp06(bot); break;
                 case "exp_02": Exp02(bot); break;
                 case "exp_03": Exp03(bot); break;
                 case "exp_04": Exp04(bot); break;
@@ -704,6 +705,53 @@ internal static class CampaignWalks
                         cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.Move, s.Units.Slots.IdOf(i), default, bot.Done("log") ? sea : wreck, (int)ActorKind.Vehicle));
             if (cmds.Count > 0) bot.Step(cmds);
             bot.Idle(20);
+        }
+    }
+
+    /// <summary>
+    /// S48 exp_06 "Dredge Rights": deploy the flagship, raise power and the Dredge Works on the beach ash (the script then grants the Hover Yard and sends two Glide Tanks),
+    /// a Hover Yard for the second Skimmer, a billet and a seawall, then marines beside Roque's Glide Tank prototypes; the army holds the beach until tick 4500
+    /// and then marches on the coast battery.
+    /// </summary>
+    private static void Exp06(MissionBot bot)
+    {
+        const int limit = 30000;
+        int ship = SimRules.IndexOf(bot.Sim.Setup.Rules.Vehicles, "exp_command_ship", v => v.Id);
+        EntityId flagship = default;
+        for (int i = 1; i < bot.Sim.Units.Capacity; i++)
+            if (bot.Sim.Units.Slots.IsIndexAlive(i) && bot.Sim.Units.Player[i] == 0 && bot.Sim.Units.TypeIndex[i] == ship) { flagship = bot.Sim.Units.Slots.IdOf(i); break; }
+        Need(flagship != default, bot, "command ship");
+        bot.Send(CommandKind.Deploy, flagship, new CellCoord(16, 48), 0);
+        Need(bot.RunUntilObjective("landing", 600), bot, "landing");
+        CellCoord depot = ExpeditionMissionTestKit.BuildingCell(bot.Sim, "exp_landing_depot");
+
+        CellCoord[] spots = ExpeditionMissionTestKit.Spots(bot.Sim, depot, 3, 10, c => c.Y <= 46 && c.X <= 28);
+        CellCoord[] shore = ExpeditionMissionTestKit.Spots(bot.Sim, new CellCoord(16, 46), 0, 6, c => c.Y >= 43);
+        Need(bot.BuildAndPlace("exp_pile_house", spots), bot, "pile house");
+        Need(bot.BuildAndPlace("exp_pile_house", spots), bot, "second pile house");   // the dredge, the yard, the farms and the billet draw more than one gives
+        Need(bot.BuildAndPlace("exp_dredge_works", shore), bot, "dredge works");
+        bot.Idle(60);   // the script grants the Hover Yard on its next poll
+        Need(bot.BuildAndPlace("exp_hover_yard", spots), bot, "hover yard");
+        bot.Train("exp_skimmer");
+        Need(bot.RunUntilObjective("dredge", 3000), bot, "dredge objective");
+        // The Dredge Works holds only 800: Tank Farms keep the Skimmers working.
+        Need(bot.BuildAndPlace("exp_tank_farm", spots), bot, "tank farm");
+        Need(bot.BuildAndPlace("exp_tank_farm", spots), bot, "second tank farm");
+        bot.Train("exp_skimmer");
+        Need(bot.BuildAndPlace("exp_billet", spots), bot, "billet");
+        Need(bot.BuildAndPlace("exp_pillbox", spots), bot, "pillbox");
+        var hold = new CellCoord(22, 42);
+        var target = new CellCoord(38, 44);
+        bool pushed = false;
+        for (int guard = 0; bot.Sim.Tick < limit && !bot.Sim.GameOver; guard++)
+        {
+            if (guard % 40 == 0) bot.Train("exp_marine");   // the Glide Tank needs the Plotting Room (a reward): Roque's four prototypes arrive by sea instead
+            if (guard % 100 == 0)
+            {
+                if (bot.Count("exp_glide_tank") >= 4 && bot.Sim.Tick >= 4500) pushed = true;
+                ExpeditionMissionTestKit.OrderLand(bot.Sim, CommandKind.AttackMove, pushed ? target : hold);
+            }
+            else bot.Idle();
         }
     }
 

@@ -93,6 +93,9 @@ public sealed partial class MissionScriptKeysTests
     [InlineData("exp_02", "e2.wave2", "e2.radio.wave2")]
     [InlineData("exp_05", "e5.band", "e5.radio.band")]
     [InlineData("exp_05", "e5.band2", "e5.radio.band2")]
+    [InlineData("exp_06", "e6.wave1", "e6.radio.wrenfield")]
+    [InlineData("exp_06", "e6.wave2", "e6.radio.wave2")]
+    [InlineData("exp_06", "e6.ship2", "e6.radio.ship2")]
     public void Previously_silent_arrivals_have_a_message_and_a_radio_line(string id, string message, string radio)
     {
         string dir = Path.Combine(TestData.DataDir, "missions", id);
