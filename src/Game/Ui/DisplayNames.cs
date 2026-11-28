@@ -15,6 +15,8 @@ public static class DisplayNames
         ["ash_plains_m_2p_41"] = "Ash Reckoning",
         ["glass_coast_m_2p_11"] = "Glass Coast",
         ["rustbelt_m2"] = "Rustbelt",
+        ["rustbelt_mill"] = "The Mill Town",   // S48 C-12 story map
+        ["tern_point"] = "Tern Point",         // S48 C-12 story map
     };
 
     private static readonly Dictionary<string, string> MissionCache = new(StringComparer.Ordinal);
