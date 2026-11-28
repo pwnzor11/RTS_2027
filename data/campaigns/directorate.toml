@@ -7,10 +7,16 @@ ending = "directorate_ending"
 [[missions]]
 id = "dir_01"
 
+# S48 (design 22, play position 3): "The Assembly Bore" follows dir_05 and comes before dir_02.
+[[missions]]
+id = "dir_06"
+# S48: dir_05 lands from wp/s48-dir05
+requires = ["dir_05"]   # TODO wp/s48-dir05: the campaign loader rejects this until dir_05 is in the list; Game.Tests Campaign* tests fail until then
+
 [[missions]]
 id = "dir_02"
 still = "still_directorate_act2"
-requires = ["dir_01"]
+requires = ["dir_06"]
 
 [[missions]]
 id = "dir_03"

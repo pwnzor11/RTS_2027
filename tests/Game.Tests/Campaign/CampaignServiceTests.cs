@@ -76,7 +76,7 @@ public sealed class CampaignServiceTests : IDisposable
     public void Mission_states_are_next_then_completed_then_unlock_the_following_one()
     {
         CampaignService s = Service();
-        Assert.Equal(new[] { "dir_01", "dir_02", "dir_03", "dir_04" }, s.Campaign("directorate").Missions.Select(m => m.Id));
+        Assert.Equal(new[] { "dir_01", "dir_06", "dir_02", "dir_03", "dir_04" }, s.Campaign("directorate").Missions.Select(m => m.Id));
         Assert.Equal(new[] { CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked },
             s.Missions("directorate").Select(m => m.State));
         Assert.All(s.Missions("directorate"), m => Assert.Equal(Directory.Exists(Path.Combine(DataDir, "missions", m.Id)), m.Exists));   // written or placeholder

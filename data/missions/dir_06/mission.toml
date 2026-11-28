@@ -1,0 +1,192 @@
+# Directorate 06: The Assembly Bore (S48 C-12, design 22 section 3.2). Play position 3 of the Directorate campaign (act 1).
+# Build and destroy: raise the smelter vent, cistern, bunk gallery and assembly bore on the scrap field under the mill town, and clear the Authority survey camp.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1], copied from the header of data/maps/rustbelt_mill.map.toml. Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "The Assembly Bore"
+map = "rustbelt_mill.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2029
+schema = 2
+act = 1
+# D-289: bot tier-3 median win x 2.5. Placeholder until the 12-seed sweep has measured it.
+par_seconds = 900  # PENDING par from sweep
+faction = "directorate"
+next = "dir_02"
+locale = "locale.toml"
+
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
+[starts_with]
+# What dir_01 ends with (its starts_with plus dir_sapper) plus dir_05's unlocks (dir_smelter_vent, dir_scraper). The cistern, bunk gallery, assembly bore
+# and rocket truck are this mission's rewards: the script grants them as the shift earns them (Tech.Grant).
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_bore_head", "dir_sapper", "dir_smelter_vent", "dir_scraper", "dir_up_blackout_canisters", "dir_up_fervour", "dir_up_hot_cores", "dir_up_lead_lining", "dir_up_mass_conscription", "dir_up_order_seven", "dir_up_tunnel_bracing"]
+
+[unlocks_on_win]
+tech = ["dir_assembly_bore", "dir_rocket_truck", "dir_cistern", "dir_bunk_gallery"]
+
+[[players]]
+slot = 0
+name = "Directorate"
+role = "human"
+team = 0
+cash = 7500
+# Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_bore_head", "dir_sapper", "dir_smelter_vent", "dir_scraper", "dir_up_blackout_canisters", "dir_up_fervour", "dir_up_hot_cores", "dir_up_lead_lining", "dir_up_mass_conscription", "dir_up_order_seven", "dir_up_tunnel_bracing"]
+
+[[players]]
+slot = 1
+name = "Authority"
+role = "ai"
+team = 1
+cash = 1500
+
+[zones.home_sw]
+rect = [1, 48, 15, 62]
+
+[zones.home_ne]
+rect = [48, 1, 62, 15]
+
+[zones.mill_town]
+rect = [17, 14, 46, 30]
+
+[zones.rail_w]
+rect = [0, 30, 17, 33]
+
+[zones.rail_e]
+rect = [57, 30, 63, 33]
+
+# The clear pad under the scrap field: the smelter vent and the assembly bore go up here.
+[zones.bore_site]
+rect = [19, 24, 28, 30]
+
+# The Authority survey camp east of the old mill, beside the rail.
+[zones.survey_camp]
+rect = [38, 25, 45, 30]
+
+[zones.pitch_spur]
+rect = [9, 24, 16, 29]
+
+[zones.spawn_n]
+rect = [27, 0, 35, 2]
+
+[zones.spawn_e]
+rect = [61, 29, 63, 34]
+
+[zones.spawn_w]
+rect = [0, 29, 2, 34]
+
+# The forward shift: the shaft that came up under the scrap field, a vent for power and a muster hatch. The rest is the player's to raise.
+[[actors]]
+type = "dir_shaft"
+player = 0
+cell = [20, 25]
+tag = "shaft"
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 0
+cell = [24, 25]
+
+[[actors]]
+type = "dir_reactor_vent"
+player = 0
+cell = [24, 28]
+
+[[actors]]
+type = "dir_muster_hatch"
+player = 0
+cell = [20, 29]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [23, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [24, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [25, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [26, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [27, 24]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [28, 24]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 0
+cell = [27, 27]
+
+[[actors]]
+type = "dir_ashthrower"
+player = 0
+cell = [28, 27]
+
+[[actors]]
+type = "dir_sapper"
+player = 0
+cell = [27, 29]
+
+[[actors]]
+type = "dir_sapper"
+player = 0
+cell = [28, 29]
+
+# Authority home base in the north-east corner, kept alive as the anchor of the enemy team (it stays home; the script sends everything else).
+[[actors]]
+type = "auth_conyard"
+player = 1
+cell = [56, 7]
+tag = "enemy_yard"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [52, 7]
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [56, 11]
+
+# The survey camp (primary): a generator, the survey rig and two searchlights. The garrison and the turrets are added by the script (counts by tier).
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [43, 27]
+tag = "camp_power"
+
+[[actors]]
+type = "auth_seismograph"
+player = 1
+cell = [40, 26]
+tag = "camp_rig"
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [39, 29]
+tag = "camp_light1"
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [44, 29]
+tag = "camp_light2"
