@@ -26,7 +26,8 @@ public class UdpTransportTests
     }
 
     // Virtual transport clock for the short-timeout tests: it advances per poll round, never with wall time, so a stalled CI runner cannot
-    // make a 300 ms silence limit expire mid-handshake (T-12). 50 us per round: the 300 ms limit is 6000 rounds.
+    // make a 300 ms silence limit expire mid-handshake (T-12). 500 us per round: the 300 ms limit is 600 rounds and the client's 5 s limit 10 000
+    // (S48: 50 us made the client-side wait 100 000 rounds, over the 20 s give-up on the Windows runner, and the spin slowed other test projects).
     private long _virtual = 1_000_000;
 
     private bool PumpVirtual(Func<bool> done, params UdpTransport[] all)
@@ -34,7 +35,7 @@ public class UdpTransportTests
         long deadline = Now + 20_000_000;
         while (Now < deadline)
         {
-            _virtual += 50;
+            _virtual += 500;
             foreach (UdpTransport t in all) t.Poll(_virtual);
             if (done()) return true;
             Thread.Yield();
