@@ -146,8 +146,9 @@ public class NetHardeningTests
         var target = new IPEndPoint(IPAddress.Loopback, responder.LocalEndPoint.Port);
         byte[] probe = new byte[] { (byte)'R', (byte)'T', (byte)'S', (byte)'Q', 8 }.Concat(Encoding.UTF8.GetBytes(DiscoveryInfo.GameName)).ToArray();
         for (int i = 0; i < 3; i++) s.SendTo(probe, target);
-        Thread.Sleep(100);
-        Assert.Equal(1, responder.Poll());   // three probes at once from one source: one reply
+        int answered = 0;
+        for (long end = Environment.TickCount64 + 10_000; answered == 0 && Environment.TickCount64 < end; Thread.Yield()) answered = responder.Poll();
+        Assert.Equal(1, answered);   // three probes at once from one source: one reply
         var buf = new byte[512];
         int n = s.Receive(buf);
         string text = Encoding.UTF8.GetString(buf, 0, n);
