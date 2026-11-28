@@ -9,10 +9,15 @@ open_after = ["auth_02", "dir_02"]
 [[missions]]
 id = "lb_01"
 
+# S48: lb_05 (play position 2) lands from wp/s48-lb05; until then lb_06 names it in requires.
+[[missions]]
+id = "lb_06"
+requires = ["lb_05"]  # S48: lb_05 lands from wp/s48-lb05
+
 [[missions]]
 id = "lb_02"
 still = "still_left_behind_act2"
-requires = ["lb_01"]
+requires = ["lb_06"]
 
 [[missions]]
 id = "lb_03"

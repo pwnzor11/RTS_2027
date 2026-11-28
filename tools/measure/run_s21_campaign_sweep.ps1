@@ -35,7 +35,7 @@ $root = (Get-Location).Path
 if (-not (Test-Path (Join-Path $root 'RTS_2027.slnx'))) { throw "Run this from the root of your RTS_2027 folder." }
 
 # The tiers each mission's walk supports (tests/Scripting.Tests/M8_15/CampaignWalks.cs, Tiers()).
-$missions = 'auth_01','auth_02','auth_07','auth_03','auth_04','dir_01','dir_02','dir_03','dir_04','lb_01','lb_02','lb_03','lb_04','exp_01','exp_02','exp_03','exp_04'
+$missions = 'auth_01','auth_02','auth_07','auth_03','auth_04','dir_01','dir_02','dir_03','dir_04','lb_01','lb_06','lb_02','lb_03','lb_04','exp_01','exp_02','exp_03','exp_04'
 $all = foreach ($m in $missions) {
     $tiers = if ($m -in 'auth_04','dir_01','exp_01') { 3, 5 } else { 1, 3, 5 }
     foreach ($t in $tiers) { "${m}:$t" }
