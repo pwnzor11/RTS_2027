@@ -15,8 +15,10 @@ par_seconds = 1680
 faction = "expedition"
 locale = "locale.toml"
 
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
-tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_tank_farm", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook", "exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver"]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_tank_farm", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook", "exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver", "exp_up_composite_armour", "exp_up_deep_survey", "exp_up_fast_charging", "exp_up_guided_shells", "exp_up_hardened_hulls", "exp_up_sonar_nets", "exp_up_vacuum_cores", "exp_up_veteran_drill"]
 
 [unlocks_on_win]
 tech = ["exp_bomber", "exp_salvo_array"]
@@ -27,7 +29,7 @@ name = "Second Relief Fleet"
 role = "human"
 team = 0
 cash = 10000
-tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_tank_farm", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook", "exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver"]
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_tank_farm", "exp_skimmer", "exp_hover_yard", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_glide_tank", "exp_gun_battery", "exp_quay", "exp_landing_craft", "exp_launch", "exp_shipyard", "exp_destroyer", "exp_sparker", "exp_flight_deck", "exp_jet", "exp_gunship", "exp_sam", "exp_skyhook", "exp_core_hall", "exp_drydock", "exp_cruiser", "exp_carrier", "exp_missile_sub", "exp_ironbound", "exp_diver", "exp_up_composite_armour", "exp_up_deep_survey", "exp_up_fast_charging", "exp_up_guided_shells", "exp_up_hardened_hulls", "exp_up_sonar_nets", "exp_up_vacuum_cores", "exp_up_veteran_drill"]
 
 [[players]]
 slot = 1

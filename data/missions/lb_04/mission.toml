@@ -16,8 +16,10 @@ faction = "left_behind"
 locale = "locale.toml"
 
 # lb_03 kit + what lb_03 unlocked (rotor pad, rolling fort, veilwalker, organ, harpoon post) + the finale's gifts: rotors, kites, flak and the Second Drift.
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_rotor_pad", "lb_rolling_fort", "lb_veilwalker", "lb_organ", "lb_harpoon_post", "lb_rotor", "lb_kite", "lb_flak_net", "lb_second_drift", "lb_still_rig", "lb_hauler"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_rotor_pad", "lb_rolling_fort", "lb_veilwalker", "lb_organ", "lb_harpoon_post", "lb_rotor", "lb_kite", "lb_flak_net", "lb_second_drift", "lb_still_rig", "lb_hauler", "lb_up_ash_wraps", "lb_up_grapple", "lb_up_patchwork", "lb_up_quick_pack", "lb_up_salvage_rights", "lb_up_scrap_plate"]
 
 [[players]]
 slot = 0
@@ -25,7 +27,7 @@ name = "The Drift"
 role = "human"
 team = 0
 cash = 3000
-tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_rotor_pad", "lb_rolling_fort", "lb_veilwalker", "lb_organ", "lb_harpoon_post", "lb_rotor", "lb_kite", "lb_flak_net", "lb_second_drift", "lb_still_rig", "lb_hauler"]
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_lookout", "lb_bench", "lb_harpoon_wagon", "lb_tinker", "lb_drifter_brute", "lb_rotor_pad", "lb_rolling_fort", "lb_veilwalker", "lb_organ", "lb_harpoon_post", "lb_rotor", "lb_kite", "lb_flak_net", "lb_second_drift", "lb_still_rig", "lb_hauler", "lb_up_ash_wraps", "lb_up_grapple", "lb_up_patchwork", "lb_up_quick_pack", "lb_up_salvage_rights", "lb_up_scrap_plate"]
 
 # The Expedition plays by its own rules (faction key): the built-in AI holds the beachhead; the script sends the counter-landing.
 [[players]]

@@ -41,7 +41,7 @@ public sealed partial class MissionHost
         {
             DynValue e = v.Table.Get(k);
             if (e.Type != DataType.String) throw Err(what + " entries must be strings");
-            if (types) ResolveType(e.String);
+            if (types) ResolveTechId(e.String);
             list.Add(e.String);
         }
 

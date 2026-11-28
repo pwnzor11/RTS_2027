@@ -20,8 +20,10 @@ gold = 120
 silver = 165
 bronze = 240
 
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
-tech = ["auth_power", "auth_refinery", "auth_factory", "auth_scraper"]
+tech = ["auth_power", "auth_refinery", "auth_factory", "auth_scraper", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [[players]]
 slot = 0
@@ -29,7 +31,7 @@ name = "Authority"
 role = "human"
 team = 0
 cash = 5200
-tech = ["auth_power", "auth_refinery", "auth_factory", "auth_scraper"]
+tech = ["auth_power", "auth_refinery", "auth_factory", "auth_scraper", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [[players]]
 slot = 1

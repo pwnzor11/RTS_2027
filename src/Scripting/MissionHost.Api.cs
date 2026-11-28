@@ -226,6 +226,13 @@ public sealed partial class MissionHost
 
     // ---- actors ----
 
+    /// <summary>Q-94: an allow-list id is a unit, structure or upgrade id; anything else is an error like an unknown unit id.</summary>
+    private void ResolveTechId(string id)
+    {
+        if (_sim!.Setup.Rules.UpgradeIndex(id) >= 0) return;
+        ResolveType(id);
+    }
+
     private (ActorKind Kind, int Index) ResolveType(string id)
     {
         SimRules rules = _sim!.Setup.Rules;
@@ -459,7 +466,7 @@ public sealed partial class MissionHost
     {
         int player = PlayerArg(a, 0);
         string id = Str(a, 1);
-        ResolveType(id);   // errors for an unknown id
+        ResolveTechId(id);   // errors for an unknown id
         if (grant) _granted[player].Add(id); else _granted[player].Remove(id);
         return DynValue.Nil;
     }
