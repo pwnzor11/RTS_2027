@@ -83,6 +83,8 @@ public sealed partial class MissionScriptKeysTests
     [InlineData("auth_03", "a3.home2", "a3.radio.home2")]
     [InlineData("auth_03", "a3.home3", "a3.radio.home3")]
     [InlineData("auth_04", "a4.raid2", "a4.radio.raid2")]
+    [InlineData("auth_06", "a6.raid1", "a6.radio.raid1")]
+    [InlineData("auth_06", "a6.raid2", "a6.radio.raid2")]
     [InlineData("auth_07", "a7.hunt1", "a7.radio.hunt1")]
     [InlineData("auth_07", "a7.hunt2", "a7.radio.hunt2")]
     [InlineData("dir_01", "d1.wave2", "d1.radio.wave2")]

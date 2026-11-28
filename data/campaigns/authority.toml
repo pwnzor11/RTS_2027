@@ -7,10 +7,18 @@ ending = "authority_ending"
 [[missions]]
 id = "auth_01"
 
+# S48 (C-12): "The Mill Town" is play position 3 (after auth_05, before auth_02).
+# S48: auth_05 lands from wp/s48-auth05
+# TODO(merge, wp/s48-auth05): set requires = ["auth_05"]. The loader rejects a requires id that is not in this list, so until auth_05 is added
+# here auth_06 requires auth_01.
+[[missions]]
+id = "auth_06"
+requires = ["auth_01"]
+
 [[missions]]
 id = "auth_02"
 still = "still_authority_act2"
-requires = ["auth_01"]
+requires = ["auth_06"]
 
 # S47 pilot (D-333, D-337): "The Defector" is play position 5 of the 12-mission plan; with only five Authority missions built it sits between
 # auth_02 and auth_03 (the list order is the play order). auth_08 will require it later.

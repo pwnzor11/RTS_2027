@@ -50,7 +50,7 @@ public sealed class CampaignSaveResumeTests
         Assert.True(after.IsCompleted("auth_01"));
         Assert.Equal(tier, after.Difficulty["auth_01"]);
         Assert.True(svc.Progress("authority").IsCompleted("auth_01"));
-        Assert.Equal(CampaignMissionState.Next, svc.StateOf("authority", "auth_02", svc.Progress("authority")));
+        Assert.Equal(CampaignMissionState.Next, svc.StateOf("authority", "auth_06", svc.Progress("authority")));   // S48: auth_06 follows auth_01 until auth_05 lands (TODO wp/s48-auth05: then auth_05 is Next)
     }
 
     [Fact]
