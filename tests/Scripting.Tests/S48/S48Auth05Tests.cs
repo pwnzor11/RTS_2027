@@ -66,10 +66,12 @@ public sealed class S48Auth05Tests
     public void The_allow_list_is_the_slot_in_set_plus_the_two_new_soldiers()
     {
         MissionSession m = MissionSession.Create(TestData.DataDir, Mission);
-        var allow = new HashSet<string>(m.Def.StartsWith);
-        foreach (string t in m.Def.Players.Single(p => p.Role == "human").Tech ?? Array.Empty<string>()) allow.Add(t);
+        // Q-94: the faction's upgrade ids are listed in every mission (gate test S48UpgradeGateTests); this test is about units and buildings.
+        static bool Upgrade(string id) => id.Contains("_up_") || id.EndsWith("_grouting");
+        var allow = new HashSet<string>(m.Def.StartsWith.Where(t => !Upgrade(t)));
+        foreach (string t in m.Def.Players.Single(p => p.Role == "human").Tech ?? Array.Empty<string>()) if (!Upgrade(t)) allow.Add(t);
         string[] auth01End = { "auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_factory", "auth_turret" };
-        Assert.All(m.Def.StartsWith, id => Assert.Contains(id, auth01End));   // starts_with is a subset of what auth_01 ends with
+        Assert.All(m.Def.StartsWith.Where(id => !Upgrade(id)), id => Assert.Contains(id, auth01End));   // starts_with is a subset of what auth_01 ends with
         Assert.Equal(auth01End.Concat(new[] { "auth_engineer", "auth_rocketeer" }).Order(), allow.Order());
     }
 

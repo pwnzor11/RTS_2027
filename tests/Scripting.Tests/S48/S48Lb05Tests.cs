@@ -59,7 +59,8 @@ public sealed class S48Lb05Tests
         MissionDef five = MissionLoader.Load(MissionLoader.FolderOf(TestData.DataDir, Mission));
         MissionDef one = MissionLoader.Load(MissionLoader.FolderOf(TestData.DataDir, "lb_01"));
         var ends = new HashSet<string>(one.StartsWith.Concat(one.UnlocksOnWin));
-        Assert.All(five.StartsWith, t => Assert.Contains(t, ends));
+        // Q-94: the faction's upgrade ids are listed in every mission (S48UpgradeGateTests); lb_01 has no researching building so it lists none.
+        Assert.All(five.StartsWith.Where(t => !t.Contains("_up_")), t => Assert.Contains(t, ends));
         var human = five.Players.Single(p => p.Role == "human").Tech!;
         Assert.All(human, t => Assert.Contains(t, five.StartsWith));
         Assert.DoesNotContain("lb_garage_rig", five.StartsWith);   // buggy and gleaner are this mission's reward: a garage would have nothing to build
