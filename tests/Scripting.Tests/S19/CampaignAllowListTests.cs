@@ -31,7 +31,7 @@ public sealed class CampaignAllowListTests
         foreach (string m in new[] { "exp_02", "exp_03", "exp_04" })
             yield return new object[] { m, new[] { "exp_tank_farm" } };          // A43 CAMPAIGN-02
         yield return new object[] { "auth_04", new[] { "auth_airfield", "auth_interceptor", "auth_bomber" } };   // A43 CAMPAIGN-03
-        foreach (string m in new[] { "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" })
+        foreach (string m in new[] { "lb_01", "lb_05", "lb_06", "lb_02", "lb_03", "lb_04" })
             yield return new object[] { m, new[] { "lb_still_rig" } };
         foreach (string m in new[] { "lb_02", "lb_03", "lb_04" })
             yield return new object[] { m, new[] { "lb_hauler" } };
@@ -56,7 +56,7 @@ public sealed class CampaignAllowListTests
 
     public static IEnumerable<object[]> AllMissions() =>
         new[] { "auth_01", "auth_05", "auth_06", "auth_02", "auth_07", "auth_03", "auth_04", "dir_01", "dir_05", "dir_06", "dir_02", "dir_03", "dir_04", "exp_01", "exp_02", "exp_03", "exp_04",
-                "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" }.Select(m => new object[] { m });
+                "lb_01", "lb_05", "lb_06", "lb_02", "lb_03", "lb_04" }.Select(m => new object[] { m });
 
     /// <summary>A43 CAMPAIGN-03: an allowed building that the rules use as a unit prerequisite must have at least one allowed unit to build
     /// from it (no dead Airfield), and every allowed unit's prerequisites are allowed too.</summary>

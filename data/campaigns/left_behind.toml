@@ -9,16 +9,19 @@ open_after = ["auth_02", "dir_02"]
 [[missions]]
 id = "lb_01"
 
-# S48 (C-12, D-337): "Under One Banner" is play position 2 of the 12-mission plan. lb_06 (Salvage Rights) will join between lb_05 and lb_02;
-# until it is built the list order is the play order, and lb_02 requires lb_05.
+# S48 (C-12): "Under One Banner" is play position 2, "Salvage Rights" play position 3 (design 22 §3.3).
 [[missions]]
 id = "lb_05"
 requires = ["lb_01"]
 
 [[missions]]
+id = "lb_06"
+requires = ["lb_05"]
+
+[[missions]]
 id = "lb_02"
 still = "still_left_behind_act2"
-requires = ["lb_05"]
+requires = ["lb_06"]
 
 [[missions]]
 id = "lb_03"

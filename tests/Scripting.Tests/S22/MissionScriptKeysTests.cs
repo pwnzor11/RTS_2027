@@ -93,6 +93,8 @@ public sealed partial class MissionScriptKeysTests
     [InlineData("dir_05", "d5.alarm1", "d5.radio.alarm1")]
     [InlineData("dir_05", "d5.alarm2", "d5.radio.alarm2")]
     [InlineData("dir_06", "d6.rail", "d6.radio.rail")]   // S48: tier 1 has no rail gang
+    [InlineData("lb_06", "lb6.scouts", "lb6.radio.scouts")]
+    [InlineData("lb_06", "lb6.late", "lb6.radio.late")]
     [InlineData("dir_01", "d1.wave2", "d1.radio.wave2")]
     [InlineData("dir_02", "d2.convoy2", "d2.radio.convoy2")]
     [InlineData("dir_04", "d4.wave2", "d4.radio.wave2")]

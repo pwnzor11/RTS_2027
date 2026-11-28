@@ -39,7 +39,7 @@ internal static class CampaignWalks
     {
         ["authority"] = new[] { "auth_01", "auth_05", "auth_06", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_05", "dir_06", "dir_02", "dir_03", "dir_04" },
-        ["left_behind"] = new[] { "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" },
+        ["left_behind"] = new[] { "lb_01", "lb_05", "lb_06", "lb_02", "lb_03", "lb_04" },
         ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
     };
 
@@ -59,6 +59,7 @@ internal static class CampaignWalks
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
         "dir_05" => 7000,   // S48: three plants in about 3000 ticks and the walk home; the dawn timer is 5400
         "lb_05" => 20000,   // S48 C-12: both holds are down by about tick 9000 at tier 3; the Gathering leaves at 21600
+        "lb_06" => 8000,   // S48: the crews arrive at tick 5400; a clean walk banks the ash well before
         "dir_01" or "exp_01" or "lb_01" => 20000,
         "dir_06" => 20000,   // S48: build, hold the pad against the survey column (tick 6000), then clear the camp
         _ => 30000,
@@ -100,6 +101,7 @@ internal static class CampaignWalks
                 case "dir_04": Dir04(bot); break;
                 case "lb_05": Lb05(bot); break;
                 case "lb_01": Lb01(bot); break;
+                case "lb_06": Lb06(bot); break;
                 case "lb_02": Lb02(bot); break;
                 case "lb_03": Lb03(bot); break;
                 case "lb_04": Lb04(bot); break;
@@ -663,6 +665,54 @@ internal static class CampaignWalks
         for (int i = 1; i < s.Units.Capacity; i++)
             if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Units.TypeIndex[i] == type) return s.Units.Slots.IdOf(i);
         return null;
+    }
+
+    /// <summary>
+    /// S48 lb_06 "Salvage Rights": the war band attack-moves east along the train lane (shooting the cars open) while the haulers are sent to
+    /// the nearest live wreck whenever they are idle; the walk ends when the script banks 1000 ash and wins.
+    /// </summary>
+    private static void Lb06(MissionBot bot)
+    {
+        const int limit = 8000;
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            // the band shoots the nearest car still standing (attack-move to its cell), then goes back to guard the Yard against the scouts
+            if (t % 60 == 0)
+            {
+                CellCoord? car = null;
+                int best = int.MaxValue;
+                for (int i = 1; i < s.Units.Capacity; i++)
+                {
+                    if (!s.Units.Slots.IsIndexAlive(i) || s.Units.Player[i] != 1) continue;
+                    string id = s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].Id;
+                    if (id != "auth_scraper" && id != "auth_carrier") continue;
+                    CellCoord c = s.Units.Position[i].ToCell();
+                    if (c.X < best) { best = c.X; car = c; }
+                }
+                bot.OrderAll(CommandKind.AttackMove, car ?? new CellCoord(43, 28));
+            }
+            if (t % 40 == 0)
+            {
+                int haulerType = SimRules.IndexOf(s.Setup.Rules.Vehicles, "lb_hauler", v => v.Id);
+                for (int i = 1; i < s.Units.Capacity; i++)
+                {
+                    if (!s.Units.Slots.IsIndexAlive(i) || s.Units.Player[i] != 0 || s.Units.TypeIndex[i] != haulerType) continue;
+                    MissionKind k = s.Units.Mission[i];
+                    if (k == MissionKind.Salvage || k == MissionKind.Return) continue;
+                    CellCoord from = s.Units.Position[i].ToCell();
+                    int best = 0; long bestD = long.MaxValue;
+                    for (int w = 1; w < s.Salvage.TicksLeft.Length; w++)
+                    {
+                        if (s.Salvage.TicksLeft[w] <= 0 || s.Salvage.Value[w] <= 0) continue;
+                        long dx = s.Salvage.CellX[w] - from.X, dy = s.Salvage.CellY[w] - from.Y;
+                        if (dx * dx + dy * dy < bestD) { bestD = dx * dx + dy * dy; best = w; }
+                    }
+                    if (best != 0) bot.Send(CommandKind.Harvest, s.Units.Slots.IdOf(i), new CellCoord(s.Salvage.CellX[best], s.Salvage.CellY[best]), (int)ActorKind.Vehicle);
+                }
+            }
+            bot.Idle(20);
+        }
     }
 
     /// <summary>Nearest soldier or vehicle (Manhattan) of the players for which <paramref name="accept"/> holds; within <paramref name="reach"/> cells.</summary>
