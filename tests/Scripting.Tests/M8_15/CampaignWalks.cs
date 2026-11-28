@@ -37,7 +37,7 @@ internal static class CampaignWalks
     /// <summary>The four campaigns in campaign order (data/campaigns/*.toml).</summary>
     public static readonly IReadOnlyDictionary<string, string[]> Campaigns = new Dictionary<string, string[]>
     {
-        ["authority"] = new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04" },
+        ["authority"] = new[] { "auth_01", "auth_05", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_02", "lb_03", "lb_04" },
         ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
@@ -54,6 +54,7 @@ internal static class CampaignWalks
     {
         "auth_01" => 14000,
         "auth_04" => 16000,
+        "auth_05" => 9000,   // S48: the 9600-tick "name read out" timer is the hard limit; a clean walk is done in about a third of it
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
         "dir_01" or "exp_01" or "lb_01" => 20000,
         _ => 30000,
@@ -83,6 +84,7 @@ internal static class CampaignWalks
                 case "auth_01": Auth01(bot); break;
                 case "auth_02": Auth02(bot); break;
                 case "auth_03": Auth03(bot); break;
+                case "auth_05": Auth05(bot); break;
                 case "auth_07": Auth07(bot); break;
                 case "auth_04": Auth04(bot); break;
                 case "dir_01": Dir01(bot); break;
@@ -223,6 +225,25 @@ internal static class CampaignWalks
             if (t % 300 == 0) March();
             if (t % 900 == 0) bot.Train("auth_rifleman");
             bot.Idle(99);
+        }
+    }
+
+    /// <summary>
+    /// S48 (auth_05 "Hatch Country"): the column attack-moves from hatch to hatch (west to east), then onto the loudspeaker pole; the hidden
+    /// logbook is a short detour at the end only if time allows (not part of the win).
+    /// </summary>
+    private static void Auth05(MissionBot bot)
+    {
+        const int limit = 9000;
+        var targets = new[] { new CellCoord(22, 14), new CellCoord(33, 17), new CellCoord(43, 13), new CellCoord(40, 10) };
+        int stage = 0;
+        bot.OrderAll(CommandKind.AttackMove, targets[0]);
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            while (stage < targets.Length && !EnemyBuildingAt(bot.Sim, targets[stage], 1)) stage++;
+            if (stage >= targets.Length) { bot.Idle(20); continue; }
+            if (t % 100 == 0) bot.OrderAll(CommandKind.AttackMove, targets[stage]);
+            bot.Idle(20);
         }
     }
 
