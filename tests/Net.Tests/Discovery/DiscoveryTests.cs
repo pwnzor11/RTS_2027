@@ -28,6 +28,20 @@ public class DiscoveryTests
         return false;
     }
 
+    /// <summary>Pumps with the probe's clock frozen at <paramref name="virtualNow"/>; only the give-up deadline is real time.</summary>
+    private static bool PumpAt(DiscoveryResponder r, DiscoveryProbe p, long virtualNow, Func<bool> done)
+    {
+        long deadline = Now + 10_000_000;
+        while (Now < deadline)
+        {
+            r.Poll();
+            p.Poll(virtualNow);
+            if (done()) return true;
+            Thread.Yield();
+        }
+        return false;
+    }
+
     [Fact]
     public void ProbeFindsTheHostOnLoopbackAndDeduplicates()
     {
@@ -56,9 +70,11 @@ public class DiscoveryTests
         var target = new IPEndPoint(IPAddress.Loopback, responder.LocalEndPoint.Port);
         using var probe = new DiscoveryProbe(0, new[] { target });
         responder.Info = Info("Changed", 3, open: false);
-        long t0 = Now;   // S45: the window starts now (the class clock can pass 1 s once N-04 rate-limits replies in earlier tests)
+        // The 1 s collection window runs on a virtual clock the test moves, not on the wall clock: on a loaded runner the reply can take
+        // longer than 1 s of real time to be pumped, which used to close the window before the assertions ran (T-12).
+        long t0 = Now;
         probe.Start(t0, 1000);
-        Assert.True(Pump(responder, probe, () => probe.Results.Count == 1));
+        Assert.True(PumpAt(responder, probe, t0, () => probe.Results.Count == 1));
         Assert.Equal("Changed", probe.Results[0].Info.LobbyName);
         Assert.False(probe.Results[0].Info.Open);
         Assert.False(probe.IsComplete);
