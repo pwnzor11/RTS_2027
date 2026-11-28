@@ -250,6 +250,10 @@ internal static class CampaignWalks
             if (stage >= targets.Length) { bot.Idle(20); continue; }
             if (t % 100 == 0) bot.OrderAll(CommandKind.AttackMove, targets[stage]);
             bot.Idle(20);
+        }
+    }
+
+    /// <summary>
     /// S48 (auth_06 "The Mill Town"): raise a power plant, the factory and a ration hall, two Turrets at the yard, then six tanks and riflemen;
     /// two scrapers go to the pitchblende spur; the strike force takes the vents and hatches one after the other (west to east, the hatch beside
     /// the grain elevator last) while later production stays home for the raids.

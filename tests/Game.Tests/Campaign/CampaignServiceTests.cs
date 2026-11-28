@@ -129,7 +129,7 @@ public sealed class CampaignServiceTests : IDisposable
         CampaignService s = Service();
         Write(s, "authority", CampaignProgress.New("authority").WithWin("x", 1, new[] { "auth_tank" }));
         CampaignStart start = s.Start(RulesDir, "authority", "auth_01", 2);
-        Assert.Equal(new[] { "auth_barracks", "auth_factory", "auth_jeep", "auth_power", "auth_refinery", "auth_rifleman", "auth_tank", "auth_wall" }, start.AllowList);
+        Assert.Equal(new[] { "auth_barracks", "auth_factory", "auth_grouting", "auth_jeep", "auth_power", "auth_refinery", "auth_rifleman", "auth_tank", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot", "auth_wall" }, start.AllowList);   // S48 Q-94: the faction upgrades are listed
         Assert.Equal(2, start.Difficulty);
         Assert.True(Allowed(start.Game.Sim, "auth_tank"));
         Assert.True(Allowed(start.Game.Sim, "auth_jeep"));

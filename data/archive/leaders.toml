@@ -320,3 +320,16 @@ started calling him the warlord. The two agreed for six years on one thing, that
 Authority said no, and they have not agreed on anything since.
 '''
 unlock = "open"
+
+# S48 C-12: the Speaker, a voice in lb_05 (and later lb_07, lb_08). Text copied verbatim from docs/lore/left_behind.md ("The Speakers"); no new facts.
+[[entry]]
+id = "leader_lb_tindall"
+category = "Leader"
+faction = "left_behind"
+title = "Marrow Tindall"
+subtitle = "Speaker of the caravans"
+body = '''
+The present Speaker is Marrow Tindall, a former railhead telegraphist who still taps her thumb in code when she thinks. She is
+patient, dry and exact, and she has not lost an argument she cared about until the Authority's letter came back.
+'''
+unlock = "campaign:lb_05" # S48 (tune)
