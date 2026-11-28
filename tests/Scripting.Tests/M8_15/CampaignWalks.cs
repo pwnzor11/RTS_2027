@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Missions;
 using Rts.Sim.Rules;
 
 namespace Rts.Scripting.Tests.M8_15;
