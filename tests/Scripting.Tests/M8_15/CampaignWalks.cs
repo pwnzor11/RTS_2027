@@ -38,7 +38,7 @@ internal static class CampaignWalks
     public static readonly IReadOnlyDictionary<string, string[]> Campaigns = new Dictionary<string, string[]>
     {
         ["authority"] = new[] { "auth_01", "auth_05", "auth_06", "auth_02", "auth_07", "auth_03", "auth_04" },
-        ["directorate"] = new[] { "dir_01", "dir_05", "dir_02", "dir_03", "dir_04" },
+        ["directorate"] = new[] { "dir_01", "dir_05", "dir_06", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" },
         ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
     };
@@ -60,6 +60,7 @@ internal static class CampaignWalks
         "dir_05" => 7000,   // S48: three plants in about 3000 ticks and the walk home; the dawn timer is 5400
         "lb_05" => 20000,   // S48 C-12: both holds are down by about tick 9000 at tier 3; the Gathering leaves at 21600
         "dir_01" or "exp_01" or "lb_01" => 20000,
+        "dir_06" => 20000,   // S48: build, hold the pad against the survey column (tick 6000), then clear the camp
         _ => 30000,
     };
 
@@ -93,6 +94,7 @@ internal static class CampaignWalks
                 case "auth_04": Auth04(bot); break;
                 case "dir_01": Dir01(bot); break;
                 case "dir_05": Dir05(bot); break;
+                case "dir_06": Dir06(bot); break;
                 case "dir_02": Dir02(bot); break;
                 case "dir_03": Dir03(bot); break;
                 case "dir_04": Dir04(bot); break;
@@ -495,6 +497,40 @@ internal static class CampaignWalks
         {
             if (guard % 100 == 0) bot.OrderAll(CommandKind.AttackMove, site);
             bot.Idle();
+        }
+    }
+
+    /// <summary>
+    /// S48 (dir_06 "The Assembly Bore"): raise the smelter vent, then the bore, cistern and bunk gallery on the pad, queue conscripts and ashthrowers
+    /// (and rocket trucks once the bore stands), and send the shift at the survey camp in groups.
+    /// </summary>
+    private static void Dir06(MissionBot bot)
+    {
+        var camp = new CellCoord(41, 27);
+        var pad = new List<CellCoord>();
+        for (int y = 24; y <= 29; y++) for (int x = 19; x <= 27; x++) pad.Add(new CellCoord(x, y));
+        Need(bot.BuildAndPlace("dir_smelter_vent", pad, 2500), bot, "smelter vent");
+        Need(bot.RunUntilObjective("smelter", bot.Sim.Tick + 200), bot, "smelter objective");
+        // defenders first: the north patrol lands at tick 1800 and the rail gang at 3600
+        for (int i = 0; i < 6; i++) bot.Train("dir_conscript");
+        for (int i = 0; i < 3; i++) bot.Train("dir_sapper");
+        bot.BuildAndPlace("dir_bunk_gallery", pad, 1500);
+        bot.BuildAndPlace("dir_assembly_bore", pad, 2500);
+        bot.BuildAndPlace("dir_cistern", pad, 1500);
+        var hold = new CellCoord(26, 27);
+        for (int guard = 0; guard < 20000 && !bot.Sim.GameOver; guard++)
+        {
+            if (guard % 200 == 0 && bot.Cash > 300)
+            {   // the queues hold only a few items: keep topping them up
+                for (int i = 0; i < 3; i++) bot.Train("dir_conscript");
+                bot.Train("dir_ashthrower");
+                if (guard % 400 == 0) bot.Train("dir_sapper");   // sappers are what cracks the searchlights
+                if (guard % 400 == 200 && bot.Count("dir_assembly_bore") > 0) bot.Train("dir_rocket_truck");
+            }
+            // hold the pad until the patrol, the rail gang and the survey column (tick 6000) are beaten, then take the camp
+            if (guard % 100 == 0) bot.OrderAll(CommandKind.AttackMove, guard >= 7000 ? camp : hold);
+            bot.Idle();
+            if (bot.Host.Outcome == MissionOutcome.Won) break;
         }
     }
 
