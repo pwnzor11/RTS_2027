@@ -25,24 +25,6 @@ public class UdpTransportTests
         return false;
     }
 
-    // Virtual transport clock for the short-timeout tests: it advances per poll round, never with wall time, so a stalled CI runner cannot
-    // make a 300 ms silence limit expire mid-handshake (T-12). 500 us per round: the 300 ms limit is 600 rounds and the client's 5 s limit 10 000
-    // (S48: 50 us made the client-side wait 100 000 rounds, over the 20 s give-up on the Windows runner, and the spin slowed other test projects).
-    private long _virtual = 1_000_000;
-
-    private bool PumpVirtual(Func<bool> done, params UdpTransport[] all)
-    {
-        long deadline = Now + 20_000_000;
-        while (Now < deadline)
-        {
-            _virtual += 500;
-            foreach (UdpTransport t in all) t.Poll(_virtual);
-            if (done()) return true;
-            Thread.Yield();
-        }
-        return false;
-    }
-
     private static NetMessage.Hello Hi(string name) => new(NetProtocol.Version, "test", 42UL, name, false);
 
     private static UdpTransport Join(UdpTransport host, string name) =>
@@ -133,24 +115,24 @@ public class UdpTransportTests
         using var host = UdpTransport.Host(0, 300, IPAddress.Loopback);
         var client = Join(host, "Cy");
         int pending = 0;
-        Assert.True(PumpVirtual(() => host.TryReceive(out pending, out _), host, client));
+        Assert.True(Pump(() => host.TryReceive(out pending, out _), host, client));
         Assert.True(host.Accept(pending, 1));
         host.Send(1, new NetMessage.Welcome(1));
-        Assert.True(PumpVirtual(() => client.LocalPeer == 1, host, client));
+        Assert.True(Pump(() => client.LocalPeer == 1, host, client));
         while (host.TryGetEvent(out _)) { }
 
         client.Disconnect(0, "leaving");
         NetMessage? m = null;
-        Assert.True(PumpVirtual(() => host.TryReceive(out _, out m) && m is NetMessage.Bye, host, client));
-        Assert.True(PumpVirtual(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 1, Connected: false }, host, client));
+        Assert.True(Pump(() => host.TryReceive(out _, out m) && m is NetMessage.Bye, host, client));
+        Assert.True(Pump(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 1, Connected: false }, host, client));
         client.Dispose();
 
         // A second client that just goes quiet is dropped by the injected 300 ms timeout.
         var quiet = Join(host, "Quiet");
-        Assert.True(PumpVirtual(() => host.TryReceive(out pending, out _), host, quiet));
+        Assert.True(Pump(() => host.TryReceive(out pending, out _), host, quiet));
         Assert.True(host.Accept(pending, 2));
         while (host.TryGetEvent(out _)) { }
-        Assert.True(PumpVirtual(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 2, Connected: false, Reason: "timeout" }, host));
+        Assert.True(Pump(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 2, Connected: false, Reason: "timeout" }, host));
         quiet.Dispose();
     }
 
@@ -160,17 +142,17 @@ public class UdpTransportTests
         using var host = UdpTransport.Host(0, 300, IPAddress.Loopback);
         using var client = Join(host, "Zed");
         int pending = 0;
-        Assert.True(PumpVirtual(() => host.TryReceive(out pending, out _), host, client));
+        Assert.True(Pump(() => host.TryReceive(out pending, out _), host, client));
         Assert.True(host.Accept(pending, 1));
         host.Send(1, new NetMessage.Welcome(1));
-        Assert.True(PumpVirtual(() => client.LocalPeer == 1, host, client));
+        Assert.True(Pump(() => client.LocalPeer == 1, host, client));
         while (host.TryGetEvent(out _)) { }
         while (client.TryGetEvent(out _)) { }
 
         // The client stalls (laptop sleep): only the host polls, so it drops the silent peer.
-        Assert.True(PumpVirtual(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 1, Connected: false, Reason: "timeout" }, host));
+        Assert.True(Pump(() => host.TryGetEvent(out PeerEvent ev) && ev is { Peer: 1, Connected: false, Reason: "timeout" }, host));
         // When the client wakes up it must be told, not left on a frozen screen (NETLLM-06).
-        Assert.True(PumpVirtual(() => client.TryGetEvent(out PeerEvent ev) && ev is { Peer: 0, Connected: false }, host, client));
+        Assert.True(Pump(() => client.TryGetEvent(out PeerEvent ev) && ev is { Peer: 0, Connected: false }, host, client));
     }
 
     [Fact]
