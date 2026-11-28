@@ -101,7 +101,7 @@ mistake. Others think it was arithmetic. Marrow Tindall holds that it makes no d
 and she no longer argues it. When Authority survey cars appear on the dunes, the rigs no longer offer water. They take the
 cars and the fuel, and they keep the crews' names on the flag, which is not a kindness.
 
-An Authority officer, Brigadier Wrenfield, is known to the Drift. His brother was among those on the platform in 1990 and has
+An Authority officer, Brigadier Wrenfield, is known to the Drift. Her brother was among those on the platform in 1990 and has
 not been seen since; the caravans have a name for him, and the Brigadier has not yet asked for it. The Authority is the
 first enemy the Left Behind will fight, because the refusal was made in its offices.
 

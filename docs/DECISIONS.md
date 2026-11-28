@@ -2478,7 +2478,7 @@ no hash moved. (3) Keys: zoom out `[`, zoom in `\`, cycle selected types backquo
 as written, campaign order auth_01, auth_02, auth_07, auth_03, auth_04, par placeholder until the sweep. (6) LLM: counter_minutes 0-10;
 order status near = 5 cells, failed = army under 40 % of launch value or no arrival in 5 min; the random control gives 3 of 4 counter calls a
 1-10 min hold. (7) Layout 2: optional [biome.<key>.layout2] keys (defaults = today; no hash moved).
-**Why:** helper choices where no doc gave a value. **Status:** assumed — confirm.
+**Why:** helper choices where no doc gave a value. **Status:** confirmed by the owner (D-342).
 
 ### D-339 · 2026-11-27 · Session 47: per-map balance candidate f1 (pending its 512-game decide)
 **Decision:** candidate for B-01: Authority infantry (Rifleman, Rocketeer, Marksman, Engineer) `rad_resist_permille` 400 -> 600 (Ash Plains
@@ -2486,5 +2486,21 @@ Authority v Directorate); Rust Belt `rivers` 1 -> 0 and `ocean_width` 0 -> 2 (an
 Lives on branch `bal-s47` with the re-pinned map hashes and WaveCommit game; NOT on main until the decide (job f1, 512 games) and the campaign
 sweep (sw47b) pass. Glass Coast Directorate v Expedition (30 %) has no fix yet. **Why:** paired screens s1b-s5 (docs/balance/s47_balance.md):
 r19 put all six Rust Belt rows inside 44-58 on 96-128 games; a15 lifted ash Authority v Directorate by +11.5. **Alternatives:** map-only Ash
-changes (rough, rock: no effect); Glass ocean 0 (Expedition too weak); Directorate rockets v ships (no effect). **Status:** pending decide;
-assumed — confirm if landed.
+changes (rough, rock: no effect); Glass ocean 0 (Expedition too weak); Directorate rockets v ships (no effect). **Status:** landed in session 48 (D-340).
+
+### D-340 · 2026-11-27 · Session 48: f1 lands (B-01)
+**Decision:** land candidate f1 (D-339). The 512-game decide (job f1, 15 rows; the other 9 rows keep the s46 c7 table) put all six pairings inside
+40-60 (Authority v Directorate 42.9, v Expedition 52.6, v Left Behind 51.8; Directorate v Expedition 46.4, v Left Behind 51.7; Left Behind v
+Expedition 50.9) and all 24 rows inside 25-75 (lowest Glass Coast Directorate v Expedition 30.0, Ash Plains Authority v Directorate 32.0). Campaign
+sweep sw47b: 48 cases, every tier 1 >= 10/12 and tier 3 >= 8/12, every tier 5 >= 3/12 (D-222); the nine tier-5 cases at 11-12/12 are the same as
+sw47a. **Why:** D-305 gate met. **Status:** decided (owner asked for it to land if it passes, s48 plan).
+
+### D-341 · 2026-11-27 · Session 48: campaign outline Q5-Q9 (Q-94..Q-98)
+**Decision (owner):** (Q5) upgrades are gated like units: research needs the upgrade id on the mission allow-list, and upgrades become mission
+rewards; (Q6) three new frozen-and-edited maps: rustbelt_mill, tern_point, annex_foothills; (Q7) reserve choice-point slots at play positions 6
+and 10 per faction, written as dilemmas, built in C-03; (Q8) keep the current `open_after` ids; (Q9) leader secrets are hinted on screen and the
+Archive entry unlocked by the mission states them. **Why:** owner, all as recommended in docs/design/22 §1.
+
+### D-342 · 2026-11-27 · Session 48: Wrenfield is Hester, "her brother" (Q-99); D-338 confirmed
+**Decision (owner):** Brigadier Hester Wrenfield stays a woman; docs/lore/left_behind.md's "His brother" becomes "Her brother". D-338 (session 47
+wave-1 choices) is confirmed. **Why:** owner; briefings, the campaign page and lb_07 already say "her".
