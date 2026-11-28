@@ -86,6 +86,8 @@ public sealed partial class MissionScriptKeysTests
     [InlineData("auth_05", "a5.patrol", "a5.radio.patrol")]
     [InlineData("auth_07", "a7.hunt1", "a7.radio.hunt1")]
     [InlineData("auth_07", "a7.hunt2", "a7.radio.hunt2")]
+    [InlineData("dir_05", "d5.alarm1", "d5.radio.alarm1")]
+    [InlineData("dir_05", "d5.alarm2", "d5.radio.alarm2")]
     [InlineData("dir_01", "d1.wave2", "d1.radio.wave2")]
     [InlineData("dir_02", "d2.convoy2", "d2.radio.convoy2")]
     [InlineData("dir_04", "d4.wave2", "d4.radio.wave2")]

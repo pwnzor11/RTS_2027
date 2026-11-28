@@ -1,0 +1,160 @@
+# Directorate 05: Night Shift (S48 C-12 wave 1, D-337; design 22 section 3.2). Play position 2 of the Directorate campaign (act 1, commando, no base).
+# One conscript shift and two sappers surface at night to cut the power of three Authority plants (the searchlight line), then go home before dawn.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1] (all `(tune)`). Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "Night Shift"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+# D-289: bot tier-3 median win x 2.5.
+par_seconds = 300  # PENDING par from sweep
+faction = "directorate"
+# dir_06 (The Assembly Bore) joins later between dir_05 and dir_02 (design 22); until it is built the next mission is dir_02.
+next = "dir_02"
+locale = "locale.toml"
+
+[starts_with]
+# A subset of what dir_01 ends with (its start kit plus the sapper). Nothing is buildable without a base; this only keeps the allow-list honest.
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_bore_head"]
+
+[unlocks_on_win]
+# Introduces the smelter vent and scraper economy that dir_02 starts with.
+tech = ["dir_smelter_vent", "dir_scraper"]
+
+[[players]]
+slot = 0
+name = "Directorate"
+role = "human"
+team = 0
+cash = 0
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_bore_head"]
+
+[[players]]
+slot = 1
+name = "Authority"
+role = "ai"
+team = 1
+cash = 1500
+
+# Where the shift surfaces and must come back to ("the hatch closes behind them").
+[zones.hatch]
+rect = [12, 19, 18, 23]
+
+# The enemy base (actors at 54-58,54-58); the AI rallies here, not on the shift.
+[zones.enemy_base]
+rect = [52, 52, 62, 62]
+
+# The shift: eight conscripts and two sappers. No base: what it loses stays lost.
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [14, 20]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [15, 20]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [16, 20]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [17, 20]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [14, 21]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [15, 21]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [16, 21]
+
+[[actors]]
+type = "dir_conscript"
+player = 0
+cell = [17, 21]
+
+[[actors]]
+type = "dir_sapper"
+player = 0
+cell = [14, 22]
+
+[[actors]]
+type = "dir_sapper"
+player = 0
+cell = [15, 22]
+
+# Authority: three power plants feeding a searchlight line along the road, and a small base in the south-east corner (the anchor that keeps the team alive).
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [24, 12]
+tag = "plant1"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [36, 4]
+tag = "plant2"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [44, 10]
+tag = "plant3"
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [18, 9]
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [26, 9]
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [33, 9]
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [39, 13]
+
+[[actors]]
+type = "auth_searchlight"
+player = 1
+cell = [39, 17]
+
+[[actors]]
+type = "auth_conyard"
+player = 1
+cell = [58, 58]
+tag = "enemy_yard"
+
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [54, 58]
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [58, 54]

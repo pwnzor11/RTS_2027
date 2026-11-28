@@ -38,12 +38,12 @@ internal static class CampaignWalks
     public static readonly IReadOnlyDictionary<string, string[]> Campaigns = new Dictionary<string, string[]>
     {
         ["authority"] = new[] { "auth_01", "auth_05", "auth_02", "auth_07", "auth_03", "auth_04" },
-        ["directorate"] = new[] { "dir_01", "dir_02", "dir_03", "dir_04" },
+        ["directorate"] = new[] { "dir_01", "dir_05", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_02", "lb_03", "lb_04" },
         ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
     };
 
-    /// <summary>All 17 mission ids, campaign by campaign (S47: the 16 built ones plus the pilot auth_07).</summary>
+    /// <summary>All 18 mission ids, campaign by campaign (S47: the 16 built ones plus the pilot auth_07 and S48's dir_05).</summary>
     public static IEnumerable<string> AllMissions => Campaigns.Values.SelectMany(x => x);
 
     /// <summary>xunit data: one row per mission id.</summary>
@@ -56,6 +56,7 @@ internal static class CampaignWalks
         "auth_04" => 16000,
         "auth_05" => 9000,   // S48: the 9600-tick "name read out" timer is the hard limit; a clean walk is done in about a third of it
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
+        "dir_05" => 7000,   // S48: three plants in about 3000 ticks and the walk home; the dawn timer is 5400
         "dir_01" or "exp_01" or "lb_01" => 20000,
         _ => 30000,
     };
@@ -88,6 +89,7 @@ internal static class CampaignWalks
                 case "auth_07": Auth07(bot); break;
                 case "auth_04": Auth04(bot); break;
                 case "dir_01": Dir01(bot); break;
+                case "dir_05": Dir05(bot); break;
                 case "dir_02": Dir02(bot); break;
                 case "dir_03": Dir03(bot); break;
                 case "dir_04": Dir04(bot); break;
@@ -339,6 +341,73 @@ internal static class CampaignWalks
     }
 
     // ---------------------------------------------------------------- Directorate
+
+    /// <summary>
+    /// S48 (dir_05 "Night Shift"): the shift walks to each Authority power plant in turn (attack-move, then an Attack order on the plant),
+    /// and once all three are dark it walks home to the hatch zone.
+    /// </summary>
+    private static void Dir05(MissionBot bot)
+    {
+        const int limit = 7000;
+        var plants = new[] { new CellCoord(24, 12), new CellCoord(36, 4), new CellCoord(44, 10) };
+        var home = new CellCoord(15, 21);
+        int leg = 0;
+        bool homeward = false;
+        bot.OrderAll(CommandKind.AttackMove, new CellCoord(plants[0].X + 2, plants[0].Y + 3));
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            int powerType = SimRules.IndexOf(s.Setup.Rules.Buildings, "auth_power", b => b.Id);
+            EntityId target = default;
+            while (leg < plants.Length && target.IsNone)
+            {
+                for (int i = 1; i < s.Buildings.Capacity; i++)
+                    if (s.Buildings.Slots.IsIndexAlive(i) && s.Buildings.Player[i] == 1 && s.Buildings.TypeIndex[i] == powerType && s.Buildings.Cell[i].Equals(plants[leg]))
+                        target = s.Buildings.Slots.IdOf(i);
+                if (target.IsNone) leg++;
+            }
+            if (leg >= plants.Length)
+            {
+                if (!homeward) { homeward = true; bot.OrderAll(CommandKind.Move, home); }
+                else if (t % 200 == 0) bot.OrderAll(CommandKind.Move, home);
+            }
+            else if (t % 60 == 0)
+            {   // fight whatever stands within 9 cells of the shift first (attack-move onto it), otherwise every soldier attacks the plant
+                int sx = 0, sy = 0, n = 0;
+                for (int i = 1; i < s.Infantry.Capacity; i++)
+                    if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0) { CellCoord c = s.Infantry.Position[i].ToCell(); sx += c.X; sy += c.Y; n++; }
+                var foe = new CellCoord(-1, -1);
+                int best = 9;
+                if (n > 0)
+                {
+                    for (int i = 1; i < s.Infantry.Capacity; i++)
+                        if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 1)
+                        {
+                            CellCoord c = s.Infantry.Position[i].ToCell();
+                            int d = Math.Max(Math.Abs(c.X - sx / n), Math.Abs(c.Y - sy / n));
+                            if (d < best) { best = d; foe = c; }
+                        }
+                    for (int i = 1; i < s.Units.Capacity; i++)
+                        if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 1)
+                        {
+                            CellCoord c = s.Units.Position[i].ToCell();
+                            int d = Math.Max(Math.Abs(c.X - sx / n), Math.Abs(c.Y - sy / n));
+                            if (d < best) { best = d; foe = c; }
+                        }
+                }
+                if (foe.X >= 0) bot.OrderAll(CommandKind.AttackMove, foe);
+                else
+                {
+                    var cmds = new List<Command>();
+                    for (int i = 1; i < s.Infantry.Capacity; i++)
+                        if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0)
+                            cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.Attack, s.Infantry.Slots.IdOf(i), target, default, (int)ActorKind.Infantry | ((int)ActorKind.Building << 8)));
+                    bot.Step(cmds);
+                }
+            }
+            bot.Idle(20);
+        }
+    }
 
     private static void Dir01(MissionBot bot)
     {

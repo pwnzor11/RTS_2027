@@ -62,7 +62,10 @@ public sealed class MissionParTests : IDisposable
             Assert.True(par == 0 || par is >= 60 and <= 36000, $"{Path.GetFileName(folder)}: par {par}");
             if (par > 0) withPar++;
         }
-        Assert.Equal(14, withPar);   // S47: 12 measured pars plus auth_07 (sw47a); S48: plus the auth_05 placeholder
+        // S48 (C-12 wave 1): each new mission ships a placeholder par until its sweep; count the ones that exist so parallel packages do not collide.
+        int s48 = new[] { "auth_05", "auth_06", "dir_05", "dir_06", "lb_05", "lb_06", "exp_05", "exp_06" }
+            .Count(id => Directory.Exists(MissionLoader.FolderOf(TestData.DataDir, id)));
+        Assert.Equal(13 + s48, withPar);   // S47: 12 measured pars plus auth_07 (sw47a); S48: plus the wave-1 placeholders
     }
 
     [Fact]

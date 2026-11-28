@@ -1,0 +1,24 @@
+# Directorate 05 "Night Shift" locale. Speaker: the Voice (leader_dir_larkin), the Directorate broadcast voice.
+# Voice lines are text only for now: there is no [voice] table, so no audio is looked up and a missing file can never error.
+"d5.start" = "Cut the power of the three Authority plants, then bring the shift home before dawn."
+"d5.radio.lullaby" = "This is the Voice. Hush now, little shaft, the wind is in the ash. Night shift, answer your names: eight conscripts, two sappers."
+"d5.radio.start" = "Three plants feed the searchlights along the road. Cut them, Foreman. The hatch is behind you, and it will close."
+"d5.plant" = "A power plant is dark."
+"d5.radio.plant1" = "One plant is dark. A light has closed its eye. Two to go."
+"d5.radio.plant2" = "Two dark. The line is flickering, Foreman. One more."
+"d5.alarm1" = "The tenancy has heard the first plant fall. Riflemen from the north."
+"d5.radio.alarm1" = "The tenancy is stirring. Riflemen from the north road. Do not stay to be counted."
+"d5.alarm2" = "Authority riflemen from the east."
+"d5.radio.alarm2" = "More on the east road. The night is thinner than it was. Mind your sappers."
+"d5.dark" = "The searchlight line is dark. Bring the shift home."
+"d5.radio.dark" = "All three plants are dark. Come home, Foreman, by the way you went. The hatch is waiting, and the sky is paling."
+"d5.win" = "The shift is home. The hatch closes."
+"d5.radio.win" = "Home. Count them, Foreman. A good shift is one that is counted twice. Sleep now."
+"d5.dawn" = "Dawn has come. The hatch is shut."
+"d5.lost" = "The night shift is lost. No one is left to come home."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"d5.obj.power" = "Destroy the three Authority power plants"
+"d5.obj.home" = "Bring the shift back to the hatch before dawn"
+"d5.obj.sappers" = "Bring both sappers home alive"
+"d5.timer.dawn" = "Dawn"
