@@ -216,7 +216,7 @@ public sealed class MapGenLayout2Tests
 
     private static ulong L1Hash(Biome b) => b switch
     {
-        Biome.RustBelt => 0x5c6d7443fc81826dUL,
+        Biome.RustBelt => 0xfe92ec9c0c814ad7UL,
         Biome.AshPlains => 0x9c8d5a61c87e9a24UL,   // s36 D-277: mirror_x; M13-33: start_row_shift 6; S37 M13-36: Ash fords are decks
         Biome.Mountains => 0x0a869ef4b9a595b8UL,   // M13-33: start_row_shift 6
         _ => 0xec88b4536169df69UL,

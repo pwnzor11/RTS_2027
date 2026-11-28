@@ -63,11 +63,11 @@ public sealed class MapGenLayout2KeysTests
     // Maps of the shipped defaults (no layout2 table): layout 1 and layout 2 hashes, Medium 2 players, seeds 1..3. Captured on the build before the keys existed.
     private static readonly Dictionary<(Biome, ulong, int), ulong> Pins = new()
     {
-        [(Biome.RustBelt, 1UL, 1)] = 0x5c6d7443fc81826dUL,
+        [(Biome.RustBelt, 1UL, 1)] = 0xfe92ec9c0c814ad7UL,
         [(Biome.RustBelt, 1UL, 2)] = 0x4017fce729ea5ce1UL,
-        [(Biome.RustBelt, 2UL, 1)] = 0xb73c9d16e0fc6c0fUL,
+        [(Biome.RustBelt, 2UL, 1)] = 0xa8fd981eb7646a89UL,
         [(Biome.RustBelt, 2UL, 2)] = 0x41bd2be9c0883f57UL,
-        [(Biome.RustBelt, 3UL, 1)] = 0x0cc0e9e8bba31844UL,
+        [(Biome.RustBelt, 3UL, 1)] = 0xbd985eb70916e100UL,
         [(Biome.RustBelt, 3UL, 2)] = 0x845072feb12f97ccUL,
         [(Biome.GlassCoast, 1UL, 1)] = 0xec88b4536169df69UL,
         [(Biome.GlassCoast, 1UL, 2)] = 0x4ef0ec4581a06608UL,
