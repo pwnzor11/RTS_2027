@@ -55,7 +55,7 @@ public sealed class CampaignAllowListTests
     }
 
     public static IEnumerable<object[]> AllMissions() =>
-        new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04", "dir_01", "dir_02", "dir_03", "dir_04", "exp_01", "exp_02", "exp_03", "exp_04",
+        new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04", "dir_01", "dir_02", "dir_03", "dir_04", "exp_01", "exp_05", "exp_02", "exp_03", "exp_04",
                 "lb_01", "lb_02", "lb_03", "lb_04" }.Select(m => new object[] { m });
 
     /// <summary>A43 CAMPAIGN-03: an allowed building that the rules use as a unit prerequisite must have at least one allowed unit to build

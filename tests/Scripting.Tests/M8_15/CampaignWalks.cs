@@ -40,7 +40,7 @@ internal static class CampaignWalks
         ["authority"] = new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_02", "lb_03", "lb_04" },
-        ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
+        ["expedition"] = new[] { "exp_01", "exp_05", "exp_02", "exp_03", "exp_04" },
     };
 
     /// <summary>All 17 mission ids, campaign by campaign (S47: the 16 built ones plus the pilot auth_07).</summary>
@@ -55,6 +55,7 @@ internal static class CampaignWalks
         "auth_01" => 14000,
         "auth_04" => 16000,
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
+        "exp_05" => 4800,    // S48: the launch leaves at tick 4800 (the tide timer), so a win is earlier than this
         "dir_01" or "exp_01" or "lb_01" => 20000,
         _ => 30000,
     };
@@ -94,6 +95,7 @@ internal static class CampaignWalks
                 case "lb_03": Lb03(bot); break;
                 case "lb_04": Lb04(bot); break;
                 case "exp_01": Exp01(bot); break;
+                case "exp_05": Exp05(bot); break;
                 case "exp_02": Exp02(bot); break;
                 case "exp_03": Exp03(bot); break;
                 case "exp_04": Exp04(bot); break;
@@ -673,6 +675,35 @@ internal static class CampaignWalks
         {
             if (guard % 50 == 0) bot.OrderAll(CommandKind.AttackMove, ExpeditionMissionTestKit.EnemyNear(bot.Sim, depot, 20) ?? hold);
             else bot.Idle();
+        }
+    }
+
+    /// <summary>
+    /// S48 exp_05 "The South Coast": the soldiers march onto the sandbar and clear the scavengers (the Survey Hover waits on the beach, it is unarmed);
+    /// once the wreck is clear the hover takes the log and runs south into the open sea.
+    /// </summary>
+    private static void Exp05(MissionBot bot)
+    {
+        const int limit = 4800;
+        var wreck = new CellCoord(33, 49);
+        var sea = new CellCoord(30, 61);
+        Simulation s0 = bot.Sim;
+        int hoverType = SimRules.IndexOf(s0.Setup.Rules.Vehicles, "exp_survey_hover", v => v.Id);
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            var cmds = new List<Command>();
+            bool cleared = bot.Host.Dialogue.Any(d => d.Key == "e5.radio.cleared");
+            if (t % 100 == 0)
+                for (int i = 1; i < s.Infantry.Capacity; i++)
+                    if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0)
+                        cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.AttackMove, s.Infantry.Slots.IdOf(i), default, wreck, (int)ActorKind.Infantry));
+            if (cleared && t % 40 == 0)
+                for (int i = 1; i < s.Units.Capacity; i++)
+                    if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Units.TypeIndex[i] == hoverType)
+                        cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.Move, s.Units.Slots.IdOf(i), default, bot.Done("log") ? sea : wreck, (int)ActorKind.Vehicle));
+            if (cmds.Count > 0) bot.Step(cmds);
+            bot.Idle(20);
         }
     }
 
