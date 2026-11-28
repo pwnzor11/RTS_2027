@@ -37,13 +37,13 @@ internal static class CampaignWalks
     /// <summary>The four campaigns in campaign order (data/campaigns/*.toml).</summary>
     public static readonly IReadOnlyDictionary<string, string[]> Campaigns = new Dictionary<string, string[]>
     {
-        ["authority"] = new[] { "auth_01", "auth_05", "auth_02", "auth_07", "auth_03", "auth_04" },
+        ["authority"] = new[] { "auth_01", "auth_05", "auth_06", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_05", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" },
         ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
     };
 
-    /// <summary>All 18 mission ids, campaign by campaign (S47: the 16 built ones plus the pilot auth_07 and S48's dir_05).</summary>
+    /// <summary>Every mission id, campaign by campaign (S47: the 16 built ones plus the pilot auth_07; S48: plus the C-12 wave-1 missions).</summary>
     public static IEnumerable<string> AllMissions => Campaigns.Values.SelectMany(x => x);
 
     /// <summary>xunit data: one row per mission id.</summary>
@@ -55,6 +55,7 @@ internal static class CampaignWalks
         "auth_01" => 14000,
         "auth_04" => 16000,
         "auth_05" => 9000,   // S48: the 9600-tick "name read out" timer is the hard limit; a clean walk is done in about a third of it
+        "auth_06" => 15000,   // S48: the grain-train timer ends the mission at tick 15000, so a winning walk must be done before it
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
         "dir_05" => 7000,   // S48: three plants in about 3000 ticks and the walk home; the dawn timer is 5400
         "lb_05" => 20000,   // S48 C-12: both holds are down by about tick 9000 at tier 3; the Gathering leaves at 21600
@@ -87,6 +88,7 @@ internal static class CampaignWalks
                 case "auth_02": Auth02(bot); break;
                 case "auth_03": Auth03(bot); break;
                 case "auth_05": Auth05(bot); break;
+                case "auth_06": Auth06(bot); break;
                 case "auth_07": Auth07(bot); break;
                 case "auth_04": Auth04(bot); break;
                 case "dir_01": Dir01(bot); break;
@@ -248,6 +250,63 @@ internal static class CampaignWalks
             if (stage >= targets.Length) { bot.Idle(20); continue; }
             if (t % 100 == 0) bot.OrderAll(CommandKind.AttackMove, targets[stage]);
             bot.Idle(20);
+    /// S48 (auth_06 "The Mill Town"): raise a power plant, the factory and a ration hall, two Turrets at the yard, then six tanks and riflemen;
+    /// two scrapers go to the pitchblende spur; the strike force takes the vents and hatches one after the other (west to east, the hatch beside
+    /// the grain elevator last) while later production stays home for the raids.
+    /// </summary>
+    private static void Auth06(MissionBot bot)
+    {
+        const int limit = 14000;
+        var spots = new List<CellCoord>();
+        for (int y = 48; y <= 61; y += 1)
+            for (int x = 2; x <= 14; x += 1) spots.Add(new CellCoord(x, y));
+        var turretSpots = new CellCoord[] { new(14, 55), new(14, 58), new(10, 49), new(16, 56), new(12, 47), new(5, 47) };
+        Need(bot.BuildAndPlace("auth_power", spots, 1500), bot, "second power plant");
+        Need(bot.BuildAndPlace("auth_factory", spots, 3000), bot, "factory");
+        Need(bot.BuildAndPlace("auth_ration_hall", spots, 1500), bot, "ration hall");
+        Need(bot.BuildAndPlace("auth_turret", turretSpots, 1500), bot, "first turret");
+        Need(bot.BuildAndPlace("auth_turret", turretSpots, 1500), bot, "second turret");
+        for (int i = 0; i < 4; i++) bot.Train("auth_tank");
+        for (int i = 0; i < 6; i++) bot.Train("auth_rifleman");
+        Need(bot.RunUntil(() => bot.Count("auth_tank") >= 4 && bot.Count("auth_rifleman") >= 10, bot.Sim.Tick + 7000, 10), bot, "strike force");
+
+        // two scrapers go to the spur and stay (a Move order leaves them idle there)
+        Simulation s = bot.Sim;
+        int sent = 0;
+        for (int i = 1; i < s.Units.Capacity && sent < 2; i++)
+            if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].HarvestCapacity > 0)
+            {
+                bot.Send(CommandKind.Move, s.Units.Slots.IdOf(i), new CellCoord(12 + sent, 25), (int)ActorKind.Vehicle);
+                sent++;
+            }
+
+        var strike = new List<(EntityId Id, ActorKind Kind)>();
+        for (int i = 1; i < s.Units.Capacity; i++)
+            if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].HarvestCapacity == 0)
+                strike.Add((s.Units.Slots.IdOf(i), ActorKind.Vehicle));
+        for (int i = 1; i < s.Infantry.Capacity; i++)
+            if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0) strike.Add((s.Infantry.Slots.IdOf(i), ActorKind.Infantry));
+
+        var targets = new CellCoord[] { new(22, 26), new(24, 19), new(31, 25), new(38, 22), new(40, 27), new(46, 22) };
+        bool Standing(CellCoord c)
+        {
+            Simulation s = bot.Sim;   // not a cached reference: the save/load test rebinds the bot to a loaded simulation
+            for (int i = 1; i < s.Buildings.Capacity; i++)
+                if (s.Buildings.Slots.IsIndexAlive(i) && s.Buildings.Player[i] == 1 && s.Buildings.Cell[i].Equals(c) && s.Buildings.Health[i] > 0) return true;
+            return false;
+        }
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 100)
+        {
+            CellCoord goal = targets[^1];
+            foreach (CellCoord c in targets)
+                if (Standing(c)) { goal = c; break; }
+            foreach ((EntityId id, ActorKind kind) in strike)
+            {
+                bool alive = kind == ActorKind.Vehicle ? bot.Sim.Units.Slots.IsAlive(id) : bot.Sim.Infantry.Slots.IsAlive(id);
+                if (alive) bot.Send(CommandKind.AttackMove, id, goal, (int)kind);
+            }
+            if (t % 600 == 0) { bot.Train("auth_tank"); bot.Train("auth_rifleman"); }
+            bot.Idle(99);
         }
     }
 
