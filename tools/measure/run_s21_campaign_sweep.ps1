@@ -13,6 +13,7 @@
       powershell -ExecutionPolicy Bypass -File tools\measure\run_s21_campaign_sweep.ps1
 
   EXPECTED RUN TIME: about 30-60 minutes with the default jobs (46 mission-tiers x 12 seeds; most walks take seconds, the act-4 missions
+  EXPECTED RUN TIME: about 30-60 minutes with the default jobs (49 mission-tiers x 12 seeds; most walks take seconds, the act-4 missions
   about a minute each). Use -Cases to run part of it, e.g. -Cases exp_03:5,auth_03:3
 
   Results go to balance_runs\s21sweep\ : one .log per job and s21sweep_summary.md (send that one back, or leave it there for the lead
@@ -22,6 +23,7 @@
   Sweep processes to run at once. Default: half the logical CPUs.
 .PARAMETER Cases
   Mission-tiers to run as id:tier, default all 46.
+  Mission-tiers to run as id:tier, default all 49.
 .PARAMETER SkipBuild
   Reuse the last build.
 #>
@@ -35,7 +37,7 @@ $root = (Get-Location).Path
 if (-not (Test-Path (Join-Path $root 'RTS_2027.slnx'))) { throw "Run this from the root of your RTS_2027 folder." }
 
 # The tiers each mission's walk supports (tests/Scripting.Tests/M8_15/CampaignWalks.cs, Tiers()).
-$missions = 'auth_01','auth_05','auth_06','auth_02','auth_07','auth_03','auth_04','dir_01','dir_05','dir_06','dir_02','dir_03','dir_04','lb_01','lb_05','lb_06','lb_02','lb_03','lb_04','exp_01','exp_02','exp_03','exp_04'
+$missions = 'auth_01','auth_05','auth_06','auth_02','auth_07','auth_03','auth_04','dir_01','dir_05','dir_06','dir_02','dir_03','dir_04','lb_01','lb_05','lb_06','lb_02','lb_03','lb_04','exp_01','exp_05','exp_06','exp_02','exp_03','exp_04'
 $all = foreach ($m in $missions) {
     $tiers = if ($m -in 'auth_04','dir_01','exp_01') { 3, 5 } else { 1, 3, 5 }
     foreach ($t in $tiers) { "${m}:$t" }

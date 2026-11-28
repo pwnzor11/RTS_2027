@@ -1,0 +1,120 @@
+# Expedition 05: The South Coast (S48 C-12 wave 1, design 22 section 3.4). Play position 2 of the Expedition campaign (after exp_01, before exp_02), act 1.
+# No base: a survey hover and a marine party off the south beach of Tern Point. Take the first relief ship's signal log from the scavengers at the wreck and run it out to sea.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1] (copied from the header of tern_point.map.toml). Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "The South Coast"
+map = "tern_point.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+# D-289: bot tier-3 median win x 2.5. Placeholder until the 12-seed sweep has measured it.
+par_seconds = 600  # PENDING par from sweep
+faction = "expedition"
+next = "exp_06"
+locale = "locale.toml"
+
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
+[starts_with]
+# exp_01's starts_with plus its unlock (the Anchorage). Nothing is buildable without a depot; this only keeps the allow-list honest.
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_up_composite_armour", "exp_up_deep_survey", "exp_up_fast_charging", "exp_up_guided_shells", "exp_up_hardened_hulls", "exp_up_sonar_nets", "exp_up_vacuum_cores", "exp_up_veteran_drill"]
+
+[unlocks_on_win]
+# The signal log gives the fleet the south-coast charts: the dredge fields and their works.
+tech = ["exp_dredge_works", "exp_skimmer", "exp_tank_farm"]
+
+[[players]]
+slot = 0
+name = "Second Relief Fleet"
+role = "human"
+team = 0
+cash = 0
+# Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_up_composite_armour", "exp_up_deep_survey", "exp_up_fast_charging", "exp_up_guided_shells", "exp_up_hardened_hulls", "exp_up_sonar_nets", "exp_up_vacuum_cores", "exp_up_veteran_drill"]
+
+[[players]]
+slot = 1
+name = "Tern Point scavengers"
+role = "ai"
+team = 1
+cash = 0
+faction = "left_behind"
+
+# The beach the party landed on (the start), the sandbar with the wreck, the open sea, the evacuation platform, the railhead.
+[zones.beach_landing]
+rect = [8, 36, 28, 49]
+
+[zones.relief_wreck]
+rect = [28, 48, 38, 54]
+
+[zones.sea_s]
+rect = [0, 53, 43, 63]
+
+[zones.platform]
+rect = [44, 48, 50, 60]
+
+[zones.railhead]
+rect = [47, 32, 62, 47]
+
+[zones.spawn_e]
+rect = [62, 8, 63, 44]
+
+# The party: one Survey Hover (it carries the log), eight marines, two pathfinders. No depot, no yard. What it loses stays lost.
+[[actors]]
+type = "exp_survey_hover"
+player = 0
+cell = [16, 43]
+tag = "survey"
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [12, 39]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [13, 39]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [14, 39]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [15, 39]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [12, 40]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [13, 40]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [14, 40]
+
+[[actors]]
+type = "exp_marine"
+player = 0
+cell = [15, 40]
+
+[[actors]]
+type = "exp_pathfinder"
+player = 0
+cell = [17, 39]
+
+[[actors]]
+type = "exp_pathfinder"
+player = 0
+cell = [17, 40]

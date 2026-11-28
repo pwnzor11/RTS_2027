@@ -41,7 +41,7 @@ internal static class CampaignWalks
         ["authority"] = new[] { "auth_01", "auth_05", "auth_06", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_05", "dir_06", "dir_02", "dir_03", "dir_04" },
         ["left_behind"] = new[] { "lb_01", "lb_05", "lb_06", "lb_02", "lb_03", "lb_04" },
-        ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
+        ["expedition"] = new[] { "exp_01", "exp_05", "exp_06", "exp_02", "exp_03", "exp_04" },
     };
 
     /// <summary>Every mission id, campaign by campaign (S47: the 16 built ones plus the pilot auth_07; S48: plus the C-12 wave-1 missions).</summary>
@@ -61,6 +61,7 @@ internal static class CampaignWalks
         "dir_05" => 7000,   // S48: three plants in about 3000 ticks and the walk home; the dawn timer is 5400
         "lb_05" => 20000,   // S48 C-12: both holds are down by about tick 9000 at tier 3; the Gathering leaves at 21600
         "lb_06" => 8000,   // S48: the crews arrive at tick 5400; a clean walk banks the ash well before
+        "exp_05" => 4800,    // S48: the launch leaves at tick 4800 (the tide timer), so a win is earlier than this
         "dir_01" or "exp_01" or "lb_01" => 20000,
         "dir_06" => 20000,   // S48: build, hold the pad against the survey column (tick 6000), then clear the camp
         _ => 30000,
@@ -107,6 +108,8 @@ internal static class CampaignWalks
                 case "lb_03": Lb03(bot); break;
                 case "lb_04": Lb04(bot); break;
                 case "exp_01": Exp01(bot); break;
+                case "exp_05": Exp05(bot); break;
+                case "exp_06": Exp06(bot); break;
                 case "exp_02": Exp02(bot); break;
                 case "exp_03": Exp03(bot); break;
                 case "exp_04": Exp04(bot); break;
@@ -713,6 +716,82 @@ internal static class CampaignWalks
                 }
             }
             bot.Idle(20);
+        }
+    }
+
+    /// <summary>
+    /// S48 exp_05 "The South Coast": the soldiers march onto the sandbar and clear the scavengers (the Survey Hover waits on the beach, it is unarmed);
+    /// once the wreck is clear the hover takes the log and runs south into the open sea.
+    /// </summary>
+    private static void Exp05(MissionBot bot)
+    {
+        const int limit = 4800;
+        var wreck = new CellCoord(33, 49);
+        var sea = new CellCoord(30, 61);
+        Simulation s0 = bot.Sim;
+        int hoverType = SimRules.IndexOf(s0.Setup.Rules.Vehicles, "exp_survey_hover", v => v.Id);
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            var cmds = new List<Command>();
+            bool cleared = bot.Host.Dialogue.Any(d => d.Key == "e5.radio.cleared");
+            if (t % 100 == 0)
+                for (int i = 1; i < s.Infantry.Capacity; i++)
+                    if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0)
+                        cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.AttackMove, s.Infantry.Slots.IdOf(i), default, wreck, (int)ActorKind.Infantry));
+            if (cleared && t % 40 == 0)
+                for (int i = 1; i < s.Units.Capacity; i++)
+                    if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Units.TypeIndex[i] == hoverType)
+                        cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.Move, s.Units.Slots.IdOf(i), default, bot.Done("log") ? sea : wreck, (int)ActorKind.Vehicle));
+            if (cmds.Count > 0) bot.Step(cmds);
+            bot.Idle(20);
+        }
+    }
+
+    /// <summary>
+    /// S48 exp_06 "Dredge Rights": deploy the flagship, raise power and the Dredge Works on the beach ash (the script then grants the Hover Yard and sends two Glide Tanks),
+    /// a Hover Yard for the second Skimmer, a billet and a seawall, then marines beside Roque's Glide Tank prototypes; the army holds the beach until tick 4500
+    /// and then marches on the coast battery.
+    /// </summary>
+    private static void Exp06(MissionBot bot)
+    {
+        const int limit = 30000;
+        int ship = SimRules.IndexOf(bot.Sim.Setup.Rules.Vehicles, "exp_command_ship", v => v.Id);
+        EntityId flagship = default;
+        for (int i = 1; i < bot.Sim.Units.Capacity; i++)
+            if (bot.Sim.Units.Slots.IsIndexAlive(i) && bot.Sim.Units.Player[i] == 0 && bot.Sim.Units.TypeIndex[i] == ship) { flagship = bot.Sim.Units.Slots.IdOf(i); break; }
+        Need(flagship != default, bot, "command ship");
+        bot.Send(CommandKind.Deploy, flagship, new CellCoord(16, 48), 0);
+        Need(bot.RunUntilObjective("landing", 600), bot, "landing");
+        CellCoord depot = ExpeditionMissionTestKit.BuildingCell(bot.Sim, "exp_landing_depot");
+
+        CellCoord[] spots = ExpeditionMissionTestKit.Spots(bot.Sim, depot, 3, 10, c => c.Y <= 46 && c.X <= 28);
+        CellCoord[] shore = ExpeditionMissionTestKit.Spots(bot.Sim, new CellCoord(16, 46), 0, 6, c => c.Y >= 43);
+        Need(bot.BuildAndPlace("exp_pile_house", spots), bot, "pile house");
+        Need(bot.BuildAndPlace("exp_pile_house", spots), bot, "second pile house");   // the dredge, the yard, the farms and the billet draw more than one gives
+        Need(bot.BuildAndPlace("exp_dredge_works", shore), bot, "dredge works");
+        bot.Idle(60);   // the script grants the Hover Yard on its next poll
+        Need(bot.BuildAndPlace("exp_hover_yard", spots), bot, "hover yard");
+        bot.Train("exp_skimmer");
+        Need(bot.RunUntilObjective("dredge", 3000), bot, "dredge objective");
+        // The Dredge Works holds only 800: Tank Farms keep the Skimmers working.
+        Need(bot.BuildAndPlace("exp_tank_farm", spots), bot, "tank farm");
+        Need(bot.BuildAndPlace("exp_tank_farm", spots), bot, "second tank farm");
+        bot.Train("exp_skimmer");
+        Need(bot.BuildAndPlace("exp_billet", spots), bot, "billet");
+        Need(bot.BuildAndPlace("exp_pillbox", spots), bot, "pillbox");
+        var hold = new CellCoord(22, 42);
+        var target = new CellCoord(38, 44);
+        bool pushed = false;
+        for (int guard = 0; bot.Sim.Tick < limit && !bot.Sim.GameOver; guard++)
+        {
+            if (guard % 40 == 0) bot.Train("exp_marine");   // the Glide Tank needs the Plotting Room (a reward): Roque's four prototypes arrive by sea instead
+            if (guard % 100 == 0)
+            {
+                if (bot.Count("exp_glide_tank") >= 4 && bot.Sim.Tick >= 4500) pushed = true;
+                ExpeditionMissionTestKit.OrderLand(bot.Sim, CommandKind.AttackMove, pushed ? target : hold);
+            }
+            else bot.Idle();
         }
     }
 
