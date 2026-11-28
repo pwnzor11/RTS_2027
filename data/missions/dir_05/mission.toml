@@ -14,7 +14,7 @@ act = 1
 par_seconds = 300  # PENDING par from sweep
 faction = "directorate"
 # dir_06 (The Assembly Bore) joins later between dir_05 and dir_02 (design 22); until it is built the next mission is dir_02.
-next = "dir_02"
+next = "dir_06"
 locale = "locale.toml"
 
 # Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;

@@ -47,9 +47,9 @@ public sealed class S48Lb05Tests
 
         string toml = File.ReadAllText(Path.Combine(TestData.DataDir, "campaigns", "left_behind.toml"));
         var ids = Regex.Matches(toml, "(?m)^id = \"([a-z0-9_]+)\"").Select(x => x.Groups[1].Value).ToList();
-        Assert.Equal(new[] { "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" }, ids);
+        Assert.Equal(new[] { "lb_01", "lb_05", "lb_06", "lb_02", "lb_03", "lb_04" }, ids);   // S48: lb_06 (play position 3) follows
         Assert.Matches("(?s)id = \"lb_05\"\\s*requires = \\[\"lb_01\"\\]", toml);
-        Assert.Matches("(?s)id = \"lb_02\"[^\\[]*requires = \\[\"lb_05\"\\]", toml);
+        Assert.Matches("(?s)id = \"lb_06\"[^\\[]*requires = \\[\"lb_05\"\\]", toml);
         Assert.Contains("open_after = [\"auth_02\", \"dir_02\"]", toml);   // D-341 Q8: the faction still opens after the same missions
     }
 

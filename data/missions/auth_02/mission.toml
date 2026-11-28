@@ -10,7 +10,7 @@ seed = 2027
 schema = 2
 act = 2
 faction = "authority"
-next = "auth_03"
+next = "auth_07"
 locale = "locale.toml"
 
 # Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;

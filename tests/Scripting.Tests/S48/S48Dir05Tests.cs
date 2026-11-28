@@ -37,7 +37,7 @@ public sealed class S48Dir05Tests
         MissionSession m = MissionSession.Create(TestData.DataDir, Mission);
         Assert.Equal("directorate", m.Def.Faction);
         Assert.Equal(1, m.Def.Act);
-        Assert.Equal("dir_02", m.Def.Next[0]);
+        Assert.Equal("dir_06", m.Def.Next[0]);   // S48: dir_06 is play position 3
         Assert.Equal(0, m.Sim.Players.Cash[0]);
         Assert.Equal(new[] { "dir_smelter_vent", "dir_scraper" }, m.Def.UnlocksOnWin);
         var bot = new MissionBot(m);
