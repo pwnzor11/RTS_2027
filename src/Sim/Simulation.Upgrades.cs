@@ -115,7 +115,7 @@ public sealed partial class Simulation
 
     /// <summary>
     /// True if a Build(Upgrade, <paramref name="upgradeIndex"/>) by <paramref name="player"/> would be accepted now: the upgrade exists,
-    /// its faction is the player's, it is not yet researched or queued, its prerequisites are met, the player owns a researching
+    /// its faction is the player's, the mission unlock filter (if any) allows it, it is not yet researched or queued, its prerequisites are met, the player owns a researching
     /// building and the lane has room. Feeds <see cref="PlayerHud.BuildableUpgrades"/>.
     /// </summary>
     public bool CanResearch(byte player, int upgradeIndex)
@@ -125,6 +125,7 @@ public sealed partial class Simulation
         if (upgradeIndex < 0 || upgradeIndex >= upgrades.Count || upgradeIndex >= RuleCounts.MaxUpgrades) return false;
         UpgradeType u = upgrades[upgradeIndex];
         if (u.Faction != _players.Faction[player] || HasUpgrade(player, upgradeIndex) || UpgradeQueued(player, upgradeIndex)) return false;
+        if (UnlockFilter != null && !UnlockFilter(player, ProductionCategory.Upgrade, upgradeIndex)) return false;   // Q-94 / D-341 Q5 (b): mission allow-list gates upgrades like units
         int lane = ProductionState.Lane(player, ProductionCategory.Upgrade);
         if (_production.QueueCount[lane] >= _production.MaxQueue || _production.QueueCount[lane] >= Setup.Rules.Economy.MaxQueue) return false;
         return OwnsResearchBuilding(player) && UpgradePrerequisitesMet(player, u.Prerequisites);

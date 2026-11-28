@@ -16,9 +16,11 @@ faction = "authority"
 next = "auth_08"
 locale = "locale.toml"
 
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
 # auth_02's starts_with plus its unlocks (the act-2 kit). Nothing is buildable without a yard; this only keeps the allow-list honest.
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [unlocks_on_win]
 # D-337 Q4: Dray's log gives the tunnel bearings.
@@ -31,7 +33,7 @@ role = "human"
 team = 0
 cash = 0
 # Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_tank", "auth_engineer", "auth_ration_hall", "auth_rocketeer", "auth_scraper", "auth_silo", "auth_seismograph", "auth_engineering", "auth_searchlight", "auth_decon_truck", "auth_marksman", "auth_carrier", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [[players]]
 slot = 1

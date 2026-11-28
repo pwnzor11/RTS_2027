@@ -328,6 +328,7 @@ public sealed partial class MissionHost : ISimExtension
             ProductionCategory.Vehicle or ProductionCategory.Aircraft => typeIndex >= 0 && typeIndex < rules.Vehicles.Count ? rules.Vehicles[typeIndex].Id : null,
             ProductionCategory.Structure or ProductionCategory.Defence =>
                 typeIndex >= 0 && typeIndex < (rules.Buildings?.Count ?? 0) ? rules.Buildings![typeIndex].Id : null,
+            ProductionCategory.Upgrade => typeIndex >= 0 && typeIndex < rules.Upgrades.Count ? rules.Upgrades[typeIndex].Id : null,   // Q-94
             _ => null,
         };
         return id != null && _granted[player].Contains(id);
