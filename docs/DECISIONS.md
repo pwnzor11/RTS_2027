@@ -2525,3 +2525,11 @@ Ash Plains Auth v Dir 32.0); D-305 (40-60 pooled, 25-75 per row) is met. **Why:*
 **Alternatives:** ash resist 825 (Auth v Dir pooled about 59, two rows above 65); remove the Glass ocean (s47 gc2: the other Glass Expedition rows
 go to about 71-74). Next levers need a new kind of key (per-biome unit or AI keys), see OPEN_QUESTIONS Q-101. **Status:** decided by the lead
 within the owner's gate; the owner may ask for the 825 trade.
+
+### D-345 · 2026-11-28 · Session 49: owner answers at the session-49 start (Q-100, Q-101; D-343, D-344 confirmed)
+**Decision:** (1) Q-100 (b): lb_06 "Salvage Rights" moves the camp and the Yard to ground with no ash in reach, so only the wrecked train
+pays (map/mission edit, no new sim code). (2) Q-101 (a): accept the two per-map rows below the 35-65 aim for now (D-305 is met); per-biome
+keys stay a later option. (3) D-343 (campaign wave 1 and the upgrade gate as built) and D-344 (keep f1) are confirmed. (4) The owner reviewed
+wave 1 ("looks great") and asked for the rest of the campaign missions to be built, with cluster work handed to the cluster: act 2, act 3 and
+act 4 of all four campaigns per docs/design/22 §3, in waves, choice-point alternatives (C-03) still later. **Why:** owner's answers in chat at
+the session-49 briefing. **Status:** decided by the owner.

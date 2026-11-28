@@ -4,14 +4,14 @@ Context and trade-offs for every question are in `docs/research/00_SYNTHESIS.md`
 file cited after each question. Recommendations are the lead's, from the research.
 
 ## Open
-- 🟡 Q-100 · lb_06 "Salvage Rights": haulers are ordinary harvesters, so they fill the Yard from the ash fields beside the camp and the
-  "Bank 1200 ash" goal is met without the train (the bot wins in about 45 s). Options: (a) keep it as an easy act-1 breather; (b) **move the camp
-  and Yard to ash-free ground (map/mission edit) so only wrecks pay**; (c) a new salvage counter in the sim/Lua (code package). Recommendation: (b).
-- ⚪ Q-101 · Per-map balance below the 35-65 aim (D-344): Glass Coast Directorate v Expedition 30.0, Ash Plains Authority v Directorate 32.0.
-  Options: (a) **accept (D-305 is met)**; (b) take ash resist 825 (Ash about 45, but Glass and Rust Belt Authority v Directorate about 68); (c) a
-  code package for per-biome unit or AI keys, then screen again. Recommendation: (a) now, (c) when per-map balance is next on the plan.
 
 ## Answered
+- ✅ Q-100 · lb_06 "Salvage Rights": haulers are ordinary harvesters, so they fill the Yard from the ash fields beside the camp and the
+  "Bank 1200 ash" goal is met without the train (the bot wins in about 45 s). Options: (a) keep it as an easy act-1 breather; (b) **move the camp
+  and Yard to ash-free ground (map/mission edit) so only wrecks pay**; (c) a new salvage counter in the sim/Lua (code package). Recommendation: (b). **Answered (D-345):** (b), as recommended.
+- ✅ Q-101 · Per-map balance below the 35-65 aim (D-344): Glass Coast Directorate v Expedition 30.0, Ash Plains Authority v Directorate 32.0.
+  Options: (a) **accept (D-305 is met)**; (b) take ash resist 825 (Ash about 45, but Glass and Rust Belt Authority v Directorate about 68); (c) a
+  code package for per-biome unit or AI keys, then screen again. Recommendation: (a) now, (c) when per-map balance is next on the plan. **Answered (D-345):** (a), as recommended.
 - ✅ Q-94 · Campaign outline Q5: upgrades are not mission-gated today (CanResearch ignores UnlockFilter). (a) leave it, (b) **gate them all as mission rewards (small code package)**, (c) gate tier 3 only. docs/design/22_campaign_expansion.md §1. **Answered (D-341):** as recommended.
 - ✅ Q-95 · Outline Q6: maps for the 32 new missions. (a) reuse the 3 hand maps, (b) **add 3 new frozen-and-edited maps (rustbelt_mill, tern_point, annex_foothills)**, (c) one map per mission. **Answered (D-341):** as recommended.
 - ✅ Q-96 · Outline Q7: C-03 choice points. (a) none, (b) **reserve slots at missions 6 and 10 per faction, written as dilemmas**, (c) build one now. **Answered (D-341):** as recommended.
