@@ -12,7 +12,7 @@ KN_SRC = ROOT / 'src/Game/Controls/KeyNames.cs'
 CREDITS_MD = ROOT / 'docs/CREDITS.md'
 LICENSING_MD = ROOT / 'docs/LICENSING.md'
 
-INFO_RE = re.compile(r'new\(GameAction\.(\w+),\s*"(\w+)",\s*(\w+),\s*"((?:[^"\\]|\\.)*)",\s*Keys\.(\w+)(?:,\s*KeyContext\.\w+)?\)')
+INFO_RE = re.compile(r'new\(GameAction\.(\w+),\s*"(\w+)",\s*(\w+),\s*"((?:[^"\\]|\\.)*)",\s*Keys\.(\w+)((?:,\s*[\w.]+(?::\s*\w+)?)*)\)')   # trailing args: KeyContext.X, DefaultAlt: true
 ROW_RE = re.compile(r'A\(GameAction\.(\w+)\)|F\((\w+), "([^"]+)", "([^"]+)"\)')
 KEYNAME_RE = re.compile(r'Keys\.(\w+)\s*=>\s*"((?:[^"\\]|\\.)*)"')
 
@@ -71,8 +71,9 @@ def keys_table():
     src = GK_SRC.read_text(encoding='utf-8')
     names = dict(re.findall(r'public const string (\w+) = "([^"]+)";', src))
     info = {}
-    for act, aid, grp, desc, key in INFO_RE.findall(src):
-        info[act] = dict(id=aid, group=names[grp], desc=desc, key=key_label(key))
+    for act, aid, grp, desc, key, extra in INFO_RE.findall(src):
+        label = ('Alt+' if 'DefaultAlt: true' in extra else '') + key_label(key)   # Alt+Enter for full screen
+        info[act] = dict(id=aid, group=names[grp], desc=desc, key=label)
     body = src[src.index('private static List<ControlRow> BuildRows()'):]
     rows = []
     for m in ROW_RE.finditer(body):

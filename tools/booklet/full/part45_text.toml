@@ -5,15 +5,15 @@
 name = "Rust Belt"
 runhead = "Part IV · Theatres of War"
 map = "map_rust_belt.png"
-caption = "A Medium Rust Belt map. Two starts (red), the river across the middle, the road grid."
+caption = "A Medium Rust Belt map. Two starts (red), a sea edge on every side, the road grid."
 lead = "A ruined industrial city under snow and black ash. The old streets are still there, and so are the people who fight over them."
 ground = [
  "Roads run in a grid, one every {road_grid} cells. Between the roads lie blocks of rubble: rough ground with rock cores. Rough ground slows units. Rock stops ground units completely.",
- "One frozen river crosses the map. A crossing comes about every {ford_spacing} cells, and the crossings alternate between a road bridge and a shallow ford. Shallow water is slow going for infantry and closed to wheels and tracks.",
+ "The sea wraps the map. Deep water runs along all four edges, about {ocean_width} cells wide on a Medium map. Ground units cannot cross deep water. Hover craft and ships can.",
  "Dead trees, wrecked vehicles, concrete barriers and broken pylons stand in clusters. They block ground units like a wall. They do not block sight or shots. Pits, cracks, oil and soot stains, snow patches and small craters are only paint on the ground.",
 ]
 resources = "Each start has {ash_fields_per_start} ashfall fields and {pitch_fields_per_start} pitchblende pit. {extra_fields} more small ashfall fields lie away from the starts. About {ruins} neutral ruins stand on the map; you can garrison them."
-rewards = "Many routes and few walls. Watch the river crossings and hold the ruins near them. A line of barriers or a wreck yard can close a street, so check your path before you send a column."
+rewards = "Many routes and few walls. Hold the ruins near the roads. A line of barriers or a wreck yard can close a street, so check your path before you send a column."
 
 [biome.glass_coast]
 name = "Glass Coast"
