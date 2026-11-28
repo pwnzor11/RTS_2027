@@ -869,7 +869,7 @@ The South Coast, exp_06 Dredge Rights) wired into all four campaigns, swept (sw4
 blackout, sonar; no hash moved); T-11 booklet key list; Field Manual rebuilt; Archive entry Marrow Tindall. Balance screens s48a/s48b found no
 lever for the two rows below 35 (D-344, Q-101). Layout 2 R0 baseline (l2r0b, l2m) running on the cluster at hand-off.
 **Decisions:** D-340..D-344. **Questions:** Q-100 (lb_06 goal), Q-101 (balance aim).
-**Helpers:** 15 packages (Sonnet x13: gate, two maps, eight missions in seven packages, M-28b, T-12; Haiku x2: T-11, booklet). One server restart
+**Helpers:** 14 packages plus a wrap-up fact-check (Sonnet x12: gate, two maps, eight missions in seven packages, M-28b, T-12; Haiku x2: T-11, booklet). One server restart
 (the Expedition helper resumed by itself). Cluster: ~4 000 balance games (s48a, s48b), 72 sweep pieces, layout-2 series ongoing.
 **Problems / notes:** parallel mission packages collide in the pinned lists and CampaignWalks.cs: the generic "keep both" conflict resolution
 interleaved bot-walk methods twice; rebuilt them from each branch (see HANDOFF lessons). The T-12 test fix failed on Windows CI and was reverted.

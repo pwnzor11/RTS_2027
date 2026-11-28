@@ -2513,7 +2513,7 @@ players are never restricted. (2) Eight act-1 missions built per docs/design/22 
 dir_05, dir_06, lb_05, lb_06, exp_05, exp_06) on rustbelt_m2 and the two new maps rustbelt_mill and tern_point (script-built, zones in the map
 header comments: the map format has no zones). All unit counts, timers, cash and story details are the helpers' first guesses (listed in each
 mission's comments); pars from sweep sw48b (D-289). (3) Every built mission's `next` follows the campaign play order (auth_02 now names auth_07).
-(4) dir_05 tiers 4-5 lightened (no jeep; guards and alarms one step above tier 3): it lost 12/12 at tier 5 and at tier 4. (5) New Archive leader
+(4) dir_05 tiers 4-5 lightened (no jeep at any tier; tier 4 = tier 3 plus one guard at the first plant, tier 5 = one more than tier 3 in every guard and alarm group): it lost 12/12 at tier 5 and lost at tier 4. (5) New Archive leader
 entry "Marrow Tindall" (text copied from docs/lore/left_behind.md), unlocked by lb_05. (6) Field Manual: units with a non-zero ash resist show
 "Ash resist N%". **Why:** owner's go for the session-48 plan (C-12 wave 1). **Status:** assumed — confirm (owner play-checks, USER_CHECKS s48).
 

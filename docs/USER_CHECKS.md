@@ -813,7 +813,7 @@ Back up nothing: no save or replay format changed (save 16, replay 16).
 - **Campaign wave 1 (C-12, act 1 of all four campaigns, play positions 2 and 3):** new orders
   Authority auth_01, auth_05, auth_06, auth_02, auth_07, auth_03, auth_04; Directorate dir_01, dir_05, dir_06, dir_02, dir_03, dir_04;
   Left Behind lb_01, lb_05, lb_06, lb_02, lb_03, lb_04; Expedition exp_01, exp_05, exp_06, exp_02, exp_03, exp_04.
-  Every number in them is a first guess until the sweep (pars are placeholders). For each: play once at tier 3, check the briefing reads like the
+  Unit counts and timers are first guesses; pars come from the bot sweep sw48b (bot time x 2.5). For each: play once at tier 3, check the briefing reads like the
   built missions, the objectives and timer appear, the win fires, and say if it is too easy or too hard.
   1. **auth_05 "Hatch Country"** (rustbelt_m2, no base): "Close the three surface hatches" and "Pull down the loudspeaker pole" (a mast at the
      north) before the "Name read out" timer (8 min). A patrol comes from the north after the first hatch. Win unlocks Engineer and Rocketeer.
@@ -822,7 +822,7 @@ Back up nothing: no save or replay format changed (save 16, replay 16).
      bonus: keep the grain elevator (north-east of the town) standing.
   3. **dir_05 "Night Shift"** (rustbelt_m2, no base): "Destroy the three Authority power plants" then "Bring the shift back to the hatch before
      dawn" (Dawn timer 4.5 min). Bonus: both sappers alive.
-  4. **dir_06 "The Assembly Bore"** (rustbelt_mill, base): raise a smelter vent on the bore site (the cistern, bunk gallery and bore then appear
+  4. **dir_06 "The Assembly Bore"** (rustbelt_mill, base): raise a smelter vent on the scrap field (the cistern, bunk gallery and bore then appear
      in the build list), then clear the Authority survey camp east of the town before the "Survey column" timer. Dr. Lund speaks for the first time.
   5. **lb_05 "Under One Banner"** (rustbelt_m2, base): break the Two Fires hold's Dynamo and Muster Rigs, then Nobody's Daughter's well; the
      "Gathering moves on" timer is the deadline. New Archive entry "Marrow Tindall" (the Speaker) unlocks on the win. Bonus: a Tinker takes the
@@ -836,4 +836,4 @@ Back up nothing: no save or replay format changed (save 16, replay 16).
      shallow ash, then break the Authority battery east of the beach. Prototype Glide Tanks arrive by sea when the works stand.
 - **New maps:** skirmish map list or map editor: "The Mill Town" (rail across the middle, ruined town north of it, wrecked train east of it,
   homes in two corners) and "Tern Point" (sea and beach in the south-west, railhead and platform in the south-east).
-- **Net tests (T-12):** Windows CI Net.Tests stay green on several pushes (Discovery and UDP timeout tests use a virtual clock now).
+- **Net tests (T-12):** nothing to check: the test fix failed on Windows CI and was reverted; T-12 stays open.
