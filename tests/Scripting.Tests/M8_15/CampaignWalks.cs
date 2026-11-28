@@ -39,7 +39,7 @@ internal static class CampaignWalks
     {
         ["authority"] = new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04" },
         ["directorate"] = new[] { "dir_01", "dir_02", "dir_03", "dir_04" },
-        ["left_behind"] = new[] { "lb_01", "lb_02", "lb_03", "lb_04" },
+        ["left_behind"] = new[] { "lb_01", "lb_05", "lb_02", "lb_03", "lb_04" },   // S48: lb_05 is play position 2 (lb_06 joins later)
         ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
     };
 
@@ -55,6 +55,7 @@ internal static class CampaignWalks
         "auth_01" => 14000,
         "auth_04" => 16000,
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
+        "lb_05" => 20000,   // S48 C-12: both holds are down by about tick 9000 at tier 3; the Gathering leaves at 21600
         "dir_01" or "exp_01" or "lb_01" => 20000,
         _ => 30000,
     };
@@ -89,6 +90,7 @@ internal static class CampaignWalks
                 case "dir_02": Dir02(bot); break;
                 case "dir_03": Dir03(bot); break;
                 case "dir_04": Dir04(bot); break;
+                case "lb_05": Lb05(bot); break;
                 case "lb_01": Lb01(bot); break;
                 case "lb_02": Lb02(bot); break;
                 case "lb_03": Lb03(bot); break;
@@ -428,6 +430,43 @@ internal static class CampaignWalks
             bot.Idle(99);
         }
     }
+
+    /// <summary>
+    /// S48 C-12 (lb_05 "Under One Banner"): the whole column breaks the hold on the north-west road, comes home to meet the well's answer,
+    /// then marches down the west road on the well. It never uses the Tinker, so the hidden Mother Rig bonus is not collected.
+    /// </summary>
+    private static void Lb05(MissionBot bot)
+    {
+        bot.Idle(5);
+        var home = new CellCoord(9, 10);
+        var outpost = new CellCoord(18, 23);
+        var well = new CellCoord(11, 43);
+
+        // 1. the hold on the road: attack-move at it until its Dynamo Rig and Muster Rig are down.
+        for (int t = 0; t < 9000 && !bot.Sim.GameOver && !bot.Done("outpost"); t += 100)
+        {
+            bot.OrderAll(CommandKind.AttackMove, outpost);
+            bot.Idle(99);
+        }
+        Need(bot.Done("outpost"), bot, "the hold on the road");
+
+        // 2. back to the camp: the well's answer comes up the west road and from its army.
+        for (int t = 0; t < 6000 && !bot.Sim.GameOver && !AnswerBroken(bot); t += 100)
+        {
+            bot.OrderAll(CommandKind.AttackMove, NearestFoe(bot.Sim, home, p => p == 1, 22) ?? home);   // only what has come up the road, not the well's own guards
+            bot.Idle(99);
+        }
+        Need(AnswerBroken(bot), bot, "the well's answer");
+
+        // 3. down the west road on the well.
+        for (int t = 0; t < 12000 && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 100)
+        {
+            bot.OrderAll(CommandKind.AttackMove, well);
+            bot.Idle(99);
+        }
+    }
+
+    private static bool AnswerBroken(MissionBot bot) => bot.Host.Messages.Any(x => x.Text.Contains("The answer is broken", StringComparison.Ordinal));
 
     private static EntityId? PackedRig(Simulation s)
     {
