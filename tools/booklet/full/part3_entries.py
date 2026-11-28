@@ -85,6 +85,7 @@ def stat_list(c):
     if c['unit']:
         rows.append(('Speed', f"{c['speed']:g} cells/s"))
     rows.append(('Sight', f"{c['sight']} cells"))
+    if c['unit'] and r.get('rad_resist_permille'): rows.append(('Ash resist', f"{r['rad_resist_permille'] / 10:g}%"))
     if c['unit']:
         if r['harvest_capacity']: rows.append(('Ash capacity', f"{r['harvest_capacity']}"))
         if r['passengers']: rows.append(('Passengers', f"{r['passengers']}"))
