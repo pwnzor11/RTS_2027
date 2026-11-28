@@ -5,7 +5,10 @@ Design and page plan: `docs/design/19_field_manual.md`. Everything on a stat or 
 Run from the repo root (Python 3.12+, Pillow, Graphviz `dot`, Playwright with Chromium; on Windows `pip install pillow playwright`,
 `playwright install chromium`, Graphviz from graphviz.org):
 
-1. `python tools/booklet/data/resolve_rules.py` and `python tools/booklet/data/techtree.py` (rules with inheritance applied, tech trees).
+1. `python tools/booklet/data/resolve_rules.py --strict` and `python tools/booklet/data/techtree.py` (rules with inheritance applied, tech trees).
+   `--strict` exits 1 if the resolver finds any loader problem, such as a data key the C# loader would reject (an unknown key), a bad
+   weapon or warhead reference, or a duplicate id. Run it before a Field Manual build: a new rules key must be added to the key list in
+   `data/resolve_rules.py` (with the loader's default) or the strict run fails.
 2. Map previews: `dotnet run --project src/Tools -c Release -- map render --biome <b> --size m --players 2 --seed 3 --layout 1 --png tools/booklet/pilot/img/map_<b>.png --scale 4`
    for rust_belt, glass_coast, mountains, ash_plains.
 3. `python tools/booklet/pilot/prep.py`, `python tools/booklet/pilot/tree.py`, `python tools/booklet/pilot/build.py`,
