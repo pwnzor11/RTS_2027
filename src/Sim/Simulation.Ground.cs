@@ -104,8 +104,12 @@ public sealed partial class Simulation
         {
             var kind = (ActorKind)k;
             SlotArray slots = SlotsOf(kind);
-            for (int i = 1; i < slots.Capacity; i++)
+            // M-28b: mobile kinds only matter within one cell (the result is a yes/no, so the order of the visits is free anyway).
+            bool indexed = TryLiveCandidates(kind, cell, 1, out ReadOnlySpan<int> cand);
+            int visits = indexed ? cand.Length : slots.Capacity - 1;
+            for (int c = 0; c < visits; c++)
             {
+                int i = indexed ? cand[c] : c + 1;
                 if (!slots.IsIndexAlive(i) || !IsFriendly(viewer, PlayerAt(kind, i))) continue;
                 int d = LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i));
                 if (d <= 1) return true;
@@ -221,8 +225,11 @@ public sealed partial class Simulation
         {
             var kind = (ActorKind)k;
             SlotArray slots = SlotsOf(kind);
-            for (int i = 1; i < slots.Capacity; i++)
+            bool indexed = TryLiveCandidates(kind, cell, 1, out ReadOnlySpan<int> cand);   // M-28b, as in CanSeeThroughBlackout
+            int visits = indexed ? cand.Length : slots.Capacity - 1;
+            for (int c = 0; c < visits; c++)
             {
+                int i = indexed ? cand[c] : c + 1;
                 if (!slots.IsIndexAlive(i) || !IsFriendly(viewer, PlayerAt(kind, i))) continue;
                 int d = LeptonMath.ChebyshevCells(cell, VisionCellOf(kind, i));
                 if (d <= 1) return true;
