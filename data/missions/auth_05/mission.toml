@@ -1,0 +1,153 @@
+# Authority 05: Hatch Country (S48 wave A/B, C-12; design 22 section 3.1). Play position 2 of the Authority campaign, act 1.
+# No base: a recon column goes into the hatch country north of the pit, closes three surface hatches (engineer capture or demolition) and
+# knocks down the loudspeaker pole that reads out the column's name. Zones are inclusive cell rectangles [x0, y0, x1, y1] (all `(tune)`).
+# Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "Hatch Country"
+map = "rustbelt_m2.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+par_seconds = 600  # PENDING par from sweep (D-289: tier-3 median win x 2.5); placeholder like the auth_07 pilot had
+faction = "authority"
+next = "auth_06"
+locale = "locale.toml"
+
+[starts_with]
+# auth_01's starts_with plus its unlock (the Turret). Nothing is buildable without a yard; this only keeps the allow-list honest.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory"]
+
+[unlocks_on_win]
+# The engineer and the rocketeer get their first job here; auth_02 hands them over today.
+tech = ["auth_engineer", "auth_rocketeer"]
+
+[[players]]
+slot = 0
+name = "Authority"
+role = "human"
+team = 0
+cash = 0
+# Only these may be built (production chain prerequisites still apply). The column's engineers and rocketeers are placed, not built.
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_turret", "auth_factory", "auth_engineer", "auth_rocketeer"]
+
+[[players]]
+slot = 1
+name = "Directorate"
+role = "ai"
+team = 1
+cash = 0
+faction = "directorate"
+
+[zones.home]
+rect = [2, 2, 14, 12]
+
+# One zone round each hatch (closed = no Directorate hatch left in it), and the loudspeaker pole in the middle of the three.
+[zones.hatch1]
+rect = [20, 12, 24, 16]
+
+[zones.hatch2]
+rect = [31, 15, 35, 19]
+
+[zones.hatch3]
+rect = [41, 11, 45, 15]
+
+[zones.pole]
+rect = [38, 8, 43, 13]
+
+# Hidden bonus: the hatch-keepers' dead-drop, off the road in the north-east.
+[zones.logbook]
+rect = [50, 2, 54, 5]
+
+[zones.spawn_n]
+rect = [28, 0, 37, 0]
+
+# The column: no yard, no factory. What it loses stays lost.
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [12, 5]
+
+[[actors]]
+type = "auth_jeep"
+player = 0
+cell = [13, 5]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 6]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [11, 6]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [11, 7]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [10, 8]
+
+[[actors]]
+type = "auth_rifleman"
+player = 0
+cell = [11, 8]
+
+[[actors]]
+type = "auth_engineer"
+player = 0
+cell = [9, 6]
+
+[[actors]]
+type = "auth_engineer"
+player = 0
+cell = [9, 7]
+
+[[actors]]
+type = "auth_rocketeer"
+player = 0
+cell = [9, 8]
+
+[[actors]]
+type = "auth_rocketeer"
+player = 0
+cell = [9, 9]
+
+# The three surface hatches and the loudspeaker pole (a Directorate mast stands in for it). Each guard is placed by the script (tier counts).
+
+[[actors]]
+type = "dir_hatch"
+player = 1
+cell = [22, 14]
+tag = "hatch1"
+
+[[actors]]
+type = "dir_hatch"
+player = 1
+cell = [33, 17]
+tag = "hatch2"
+
+[[actors]]
+type = "dir_hatch"
+player = 1
+cell = [43, 13]
+tag = "hatch3"
+
+[[actors]]
+type = "dir_mast"
+player = 1
+cell = [40, 10]
+tag = "pole"
