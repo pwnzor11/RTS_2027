@@ -17,9 +17,11 @@ faction = "directorate"
 next = "dir_02"
 locale = "locale.toml"
 
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
 # A subset of what dir_01 ends with (its start kit plus the sapper). Nothing is buildable without a base; this only keeps the allow-list honest.
-tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_bore_head"]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_bore_head", "dir_up_blackout_canisters", "dir_up_fervour", "dir_up_hot_cores", "dir_up_lead_lining", "dir_up_mass_conscription", "dir_up_order_seven", "dir_up_tunnel_bracing"]
 
 [unlocks_on_win]
 # Introduces the smelter vent and scraper economy that dir_02 starts with.
@@ -31,7 +33,7 @@ name = "Directorate"
 role = "human"
 team = 0
 cash = 0
-tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_bore_head"]
+tech = ["dir_reactor_vent", "dir_muster_hatch", "dir_hatch", "dir_pillbox", "dir_conscript", "dir_ashthrower", "dir_sapper", "dir_bore_head", "dir_up_blackout_canisters", "dir_up_fervour", "dir_up_hot_cores", "dir_up_lead_lining", "dir_up_mass_conscription", "dir_up_order_seven", "dir_up_tunnel_bracing"]
 
 [[players]]
 slot = 1
