@@ -2,6 +2,7 @@
 // Copyright (c) RTS_2027 contributors. See LICENSE (incl. the MonoGame linking permission).
 using Rts.Sim;
 using Rts.Sim.Core;
+using Rts.Sim.Missions;
 using Rts.Sim.Rules;
 
 namespace Rts.Scripting.Tests.M8_15;
@@ -37,13 +38,13 @@ internal static class CampaignWalks
     /// <summary>The four campaigns in campaign order (data/campaigns/*.toml).</summary>
     public static readonly IReadOnlyDictionary<string, string[]> Campaigns = new Dictionary<string, string[]>
     {
-        ["authority"] = new[] { "auth_01", "auth_02", "auth_07", "auth_03", "auth_04" },
-        ["directorate"] = new[] { "dir_01", "dir_02", "dir_03", "dir_04" },
-        ["left_behind"] = new[] { "lb_01", "lb_02", "lb_03", "lb_04" },
-        ["expedition"] = new[] { "exp_01", "exp_02", "exp_03", "exp_04" },
+        ["authority"] = new[] { "auth_01", "auth_05", "auth_06", "auth_02", "auth_07", "auth_03", "auth_04" },
+        ["directorate"] = new[] { "dir_01", "dir_05", "dir_06", "dir_02", "dir_03", "dir_04" },
+        ["left_behind"] = new[] { "lb_01", "lb_05", "lb_06", "lb_02", "lb_03", "lb_04" },
+        ["expedition"] = new[] { "exp_01", "exp_05", "exp_06", "exp_02", "exp_03", "exp_04" },
     };
 
-    /// <summary>All 17 mission ids, campaign by campaign (S47: the 16 built ones plus the pilot auth_07).</summary>
+    /// <summary>Every mission id, campaign by campaign (S47: the 16 built ones plus the pilot auth_07; S48: plus the C-12 wave-1 missions).</summary>
     public static IEnumerable<string> AllMissions => Campaigns.Values.SelectMany(x => x);
 
     /// <summary>xunit data: one row per mission id.</summary>
@@ -54,8 +55,15 @@ internal static class CampaignWalks
     {
         "auth_01" => 14000,
         "auth_04" => 16000,
+        "auth_05" => 9000,   // S48: the 9600-tick "name read out" timer is the hard limit; a clean walk is done in about a third of it
+        "auth_06" => 15000,   // S48: the grain-train timer ends the mission at tick 15000, so a winning walk must be done before it
         "auth_07" => 8000,   // S47 pilot: found by about tick 2000, hunted from found + 600, so a clean run is home well before this
+        "dir_05" => 7000,   // S48: three plants in about 3000 ticks and the walk home; the dawn timer is 5400
+        "lb_05" => 20000,   // S48 C-12: both holds are down by about tick 9000 at tier 3; the Gathering leaves at 21600
+        "lb_06" => 8000,   // S48: the crews arrive at tick 5400; a clean walk banks the ash well before
+        "exp_05" => 4800,    // S48: the launch leaves at tick 4800 (the tide timer), so a win is earlier than this
         "dir_01" or "exp_01" or "lb_01" => 20000,
+        "dir_06" => 20000,   // S48: build, hold the pad against the survey column (tick 6000), then clear the camp
         _ => 30000,
     };
 
@@ -83,17 +91,25 @@ internal static class CampaignWalks
                 case "auth_01": Auth01(bot); break;
                 case "auth_02": Auth02(bot); break;
                 case "auth_03": Auth03(bot); break;
+                case "auth_05": Auth05(bot); break;
+                case "auth_06": Auth06(bot); break;
                 case "auth_07": Auth07(bot); break;
                 case "auth_04": Auth04(bot); break;
                 case "dir_01": Dir01(bot); break;
+                case "dir_05": Dir05(bot); break;
+                case "dir_06": Dir06(bot); break;
                 case "dir_02": Dir02(bot); break;
                 case "dir_03": Dir03(bot); break;
                 case "dir_04": Dir04(bot); break;
+                case "lb_05": Lb05(bot); break;
                 case "lb_01": Lb01(bot); break;
+                case "lb_06": Lb06(bot); break;
                 case "lb_02": Lb02(bot); break;
                 case "lb_03": Lb03(bot); break;
                 case "lb_04": Lb04(bot); break;
                 case "exp_01": Exp01(bot); break;
+                case "exp_05": Exp05(bot); break;
+                case "exp_06": Exp06(bot); break;
                 case "exp_02": Exp02(bot); break;
                 case "exp_03": Exp03(bot); break;
                 case "exp_04": Exp04(bot); break;
@@ -227,6 +243,86 @@ internal static class CampaignWalks
     }
 
     /// <summary>
+    /// S48 (auth_05 "Hatch Country"): the column attack-moves from hatch to hatch (west to east), then onto the loudspeaker pole; the hidden
+    /// logbook is a short detour at the end only if time allows (not part of the win).
+    /// </summary>
+    private static void Auth05(MissionBot bot)
+    {
+        const int limit = 9000;
+        var targets = new[] { new CellCoord(22, 14), new CellCoord(33, 17), new CellCoord(43, 13), new CellCoord(40, 10) };
+        int stage = 0;
+        bot.OrderAll(CommandKind.AttackMove, targets[0]);
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            while (stage < targets.Length && !EnemyBuildingAt(bot.Sim, targets[stage], 1)) stage++;
+            if (stage >= targets.Length) { bot.Idle(20); continue; }
+            if (t % 100 == 0) bot.OrderAll(CommandKind.AttackMove, targets[stage]);
+            bot.Idle(20);
+        }
+    }
+
+    /// <summary>
+    /// S48 (auth_06 "The Mill Town"): raise a power plant, the factory and a ration hall, two Turrets at the yard, then six tanks and riflemen;
+    /// two scrapers go to the pitchblende spur; the strike force takes the vents and hatches one after the other (west to east, the hatch beside
+    /// the grain elevator last) while later production stays home for the raids.
+    /// </summary>
+    private static void Auth06(MissionBot bot)
+    {
+        const int limit = 14000;
+        var spots = new List<CellCoord>();
+        for (int y = 48; y <= 61; y += 1)
+            for (int x = 2; x <= 14; x += 1) spots.Add(new CellCoord(x, y));
+        var turretSpots = new CellCoord[] { new(14, 55), new(14, 58), new(10, 49), new(16, 56), new(12, 47), new(5, 47) };
+        Need(bot.BuildAndPlace("auth_power", spots, 1500), bot, "second power plant");
+        Need(bot.BuildAndPlace("auth_factory", spots, 3000), bot, "factory");
+        Need(bot.BuildAndPlace("auth_ration_hall", spots, 1500), bot, "ration hall");
+        Need(bot.BuildAndPlace("auth_turret", turretSpots, 1500), bot, "first turret");
+        Need(bot.BuildAndPlace("auth_turret", turretSpots, 1500), bot, "second turret");
+        for (int i = 0; i < 4; i++) bot.Train("auth_tank");
+        for (int i = 0; i < 6; i++) bot.Train("auth_rifleman");
+        Need(bot.RunUntil(() => bot.Count("auth_tank") >= 4 && bot.Count("auth_rifleman") >= 10, bot.Sim.Tick + 7000, 10), bot, "strike force");
+
+        // two scrapers go to the spur and stay (a Move order leaves them idle there)
+        Simulation s = bot.Sim;
+        int sent = 0;
+        for (int i = 1; i < s.Units.Capacity && sent < 2; i++)
+            if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].HarvestCapacity > 0)
+            {
+                bot.Send(CommandKind.Move, s.Units.Slots.IdOf(i), new CellCoord(12 + sent, 25), (int)ActorKind.Vehicle);
+                sent++;
+            }
+
+        var strike = new List<(EntityId Id, ActorKind Kind)>();
+        for (int i = 1; i < s.Units.Capacity; i++)
+            if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].HarvestCapacity == 0)
+                strike.Add((s.Units.Slots.IdOf(i), ActorKind.Vehicle));
+        for (int i = 1; i < s.Infantry.Capacity; i++)
+            if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0) strike.Add((s.Infantry.Slots.IdOf(i), ActorKind.Infantry));
+
+        var targets = new CellCoord[] { new(22, 26), new(24, 19), new(31, 25), new(38, 22), new(40, 27), new(46, 22) };
+        bool Standing(CellCoord c)
+        {
+            Simulation s = bot.Sim;   // not a cached reference: the save/load test rebinds the bot to a loaded simulation
+            for (int i = 1; i < s.Buildings.Capacity; i++)
+                if (s.Buildings.Slots.IsIndexAlive(i) && s.Buildings.Player[i] == 1 && s.Buildings.Cell[i].Equals(c) && s.Buildings.Health[i] > 0) return true;
+            return false;
+        }
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 100)
+        {
+            CellCoord goal = targets[^1];
+            foreach (CellCoord c in targets)
+                if (Standing(c)) { goal = c; break; }
+            foreach ((EntityId id, ActorKind kind) in strike)
+            {
+                bool alive = kind == ActorKind.Vehicle ? bot.Sim.Units.Slots.IsAlive(id) : bot.Sim.Infantry.Slots.IsAlive(id);
+                if (alive) bot.Send(CommandKind.AttackMove, id, goal, (int)kind);
+            }
+            if (t % 600 == 0) { bot.Train("auth_tank"); bot.Train("auth_rifleman"); }
+            bot.Idle(99);
+        }
+    }
+
+    /// <summary>
     /// S47 pilot (auth_07 "The Defector"): the column takes the long south-west road (past the culvert, which pays the hidden bonus)
     /// to the spoil heaps, Dray boards the sealed carrier, and the carrier drives home the same way, away from the bridge picket.
     /// </summary>
@@ -319,6 +415,73 @@ internal static class CampaignWalks
 
     // ---------------------------------------------------------------- Directorate
 
+    /// <summary>
+    /// S48 (dir_05 "Night Shift"): the shift walks to each Authority power plant in turn (attack-move, then an Attack order on the plant),
+    /// and once all three are dark it walks home to the hatch zone.
+    /// </summary>
+    private static void Dir05(MissionBot bot)
+    {
+        const int limit = 7000;
+        var plants = new[] { new CellCoord(24, 12), new CellCoord(36, 4), new CellCoord(44, 10) };
+        var home = new CellCoord(15, 21);
+        int leg = 0;
+        bool homeward = false;
+        bot.OrderAll(CommandKind.AttackMove, new CellCoord(plants[0].X + 2, plants[0].Y + 3));
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            int powerType = SimRules.IndexOf(s.Setup.Rules.Buildings, "auth_power", b => b.Id);
+            EntityId target = default;
+            while (leg < plants.Length && target.IsNone)
+            {
+                for (int i = 1; i < s.Buildings.Capacity; i++)
+                    if (s.Buildings.Slots.IsIndexAlive(i) && s.Buildings.Player[i] == 1 && s.Buildings.TypeIndex[i] == powerType && s.Buildings.Cell[i].Equals(plants[leg]))
+                        target = s.Buildings.Slots.IdOf(i);
+                if (target.IsNone) leg++;
+            }
+            if (leg >= plants.Length)
+            {
+                if (!homeward) { homeward = true; bot.OrderAll(CommandKind.Move, home); }
+                else if (t % 200 == 0) bot.OrderAll(CommandKind.Move, home);
+            }
+            else if (t % 60 == 0)
+            {   // fight whatever stands within 9 cells of the shift first (attack-move onto it), otherwise every soldier attacks the plant
+                int sx = 0, sy = 0, n = 0;
+                for (int i = 1; i < s.Infantry.Capacity; i++)
+                    if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0) { CellCoord c = s.Infantry.Position[i].ToCell(); sx += c.X; sy += c.Y; n++; }
+                var foe = new CellCoord(-1, -1);
+                int best = 9;
+                if (n > 0)
+                {
+                    for (int i = 1; i < s.Infantry.Capacity; i++)
+                        if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 1)
+                        {
+                            CellCoord c = s.Infantry.Position[i].ToCell();
+                            int d = Math.Max(Math.Abs(c.X - sx / n), Math.Abs(c.Y - sy / n));
+                            if (d < best) { best = d; foe = c; }
+                        }
+                    for (int i = 1; i < s.Units.Capacity; i++)
+                        if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 1)
+                        {
+                            CellCoord c = s.Units.Position[i].ToCell();
+                            int d = Math.Max(Math.Abs(c.X - sx / n), Math.Abs(c.Y - sy / n));
+                            if (d < best) { best = d; foe = c; }
+                        }
+                }
+                if (foe.X >= 0) bot.OrderAll(CommandKind.AttackMove, foe);
+                else
+                {
+                    var cmds = new List<Command>();
+                    for (int i = 1; i < s.Infantry.Capacity; i++)
+                        if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0)
+                            cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.Attack, s.Infantry.Slots.IdOf(i), target, default, (int)ActorKind.Infantry | ((int)ActorKind.Building << 8)));
+                    bot.Step(cmds);
+                }
+            }
+            bot.Idle(20);
+        }
+    }
+
     private static void Dir01(MissionBot bot)
     {
         var site = new CellCoord(30, 25);
@@ -340,6 +503,40 @@ internal static class CampaignWalks
         {
             if (guard % 100 == 0) bot.OrderAll(CommandKind.AttackMove, site);
             bot.Idle();
+        }
+    }
+
+    /// <summary>
+    /// S48 (dir_06 "The Assembly Bore"): raise the smelter vent, then the bore, cistern and bunk gallery on the pad, queue conscripts and ashthrowers
+    /// (and rocket trucks once the bore stands), and send the shift at the survey camp in groups.
+    /// </summary>
+    private static void Dir06(MissionBot bot)
+    {
+        var camp = new CellCoord(41, 27);
+        var pad = new List<CellCoord>();
+        for (int y = 24; y <= 29; y++) for (int x = 19; x <= 27; x++) pad.Add(new CellCoord(x, y));
+        Need(bot.BuildAndPlace("dir_smelter_vent", pad, 2500), bot, "smelter vent");
+        Need(bot.RunUntilObjective("smelter", bot.Sim.Tick + 200), bot, "smelter objective");
+        // defenders first: the north patrol lands at tick 1800 and the rail gang at 3600
+        for (int i = 0; i < 6; i++) bot.Train("dir_conscript");
+        for (int i = 0; i < 3; i++) bot.Train("dir_sapper");
+        bot.BuildAndPlace("dir_bunk_gallery", pad, 1500);
+        bot.BuildAndPlace("dir_assembly_bore", pad, 2500);
+        bot.BuildAndPlace("dir_cistern", pad, 1500);
+        var hold = new CellCoord(26, 27);
+        for (int guard = 0; guard < 20000 && !bot.Sim.GameOver; guard++)
+        {
+            if (guard % 200 == 0 && bot.Cash > 300)
+            {   // the queues hold only a few items: keep topping them up
+                for (int i = 0; i < 3; i++) bot.Train("dir_conscript");
+                bot.Train("dir_ashthrower");
+                if (guard % 400 == 0) bot.Train("dir_sapper");   // sappers are what cracks the searchlights
+                if (guard % 400 == 200 && bot.Count("dir_assembly_bore") > 0) bot.Train("dir_rocket_truck");
+            }
+            // hold the pad until the patrol, the rail gang and the survey column (tick 6000) are beaten, then take the camp
+            if (guard % 100 == 0) bot.OrderAll(CommandKind.AttackMove, guard >= 7000 ? camp : hold);
+            bot.Idle();
+            if (bot.Host.Outcome == MissionOutcome.Won) break;
         }
     }
 
@@ -429,12 +626,173 @@ internal static class CampaignWalks
         }
     }
 
+    /// <summary>
+    /// S48 C-12 (lb_05 "Under One Banner"): the whole column breaks the hold on the north-west road, comes home to meet the well's answer,
+    /// then marches down the west road on the well. It never uses the Tinker, so the hidden Mother Rig bonus is not collected.
+    /// </summary>
+    private static void Lb05(MissionBot bot)
+    {
+        bot.Idle(5);
+        var home = new CellCoord(9, 10);
+        var outpost = new CellCoord(18, 23);
+        var well = new CellCoord(11, 43);
+
+        // 1. the hold on the road: attack-move at it until its Dynamo Rig and Muster Rig are down.
+        for (int t = 0; t < 9000 && !bot.Sim.GameOver && !bot.Done("outpost"); t += 100)
+        {
+            bot.OrderAll(CommandKind.AttackMove, outpost);
+            bot.Idle(99);
+        }
+        Need(bot.Done("outpost"), bot, "the hold on the road");
+
+        // 2. back to the camp: the well's answer comes up the west road and from its army.
+        for (int t = 0; t < 6000 && !bot.Sim.GameOver && !AnswerBroken(bot); t += 100)
+        {
+            bot.OrderAll(CommandKind.AttackMove, NearestFoe(bot.Sim, home, p => p == 1, 22) ?? home);   // only what has come up the road, not the well's own guards
+            bot.Idle(99);
+        }
+        Need(AnswerBroken(bot), bot, "the well's answer");
+
+        // 3. down the west road on the well.
+        for (int t = 0; t < 12000 && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 100)
+        {
+            bot.OrderAll(CommandKind.AttackMove, well);
+            bot.Idle(99);
+        }
+    }
+
+    private static bool AnswerBroken(MissionBot bot) => bot.Host.Messages.Any(x => x.Text.Contains("The answer is broken", StringComparison.Ordinal));
+
     private static EntityId? PackedRig(Simulation s)
     {
         int type = SimRules.IndexOf(s.Setup.Rules.Vehicles, "lb_mother_rig_packed", v => v.Id);
         for (int i = 1; i < s.Units.Capacity; i++)
             if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Units.TypeIndex[i] == type) return s.Units.Slots.IdOf(i);
         return null;
+    }
+
+    /// <summary>
+    /// S48 lb_06 "Salvage Rights": the war band attack-moves east along the train lane (shooting the cars open) while the haulers are sent to
+    /// the nearest live wreck whenever they are idle; the walk ends when the script banks 1000 ash and wins.
+    /// </summary>
+    private static void Lb06(MissionBot bot)
+    {
+        const int limit = 8000;
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            // the band shoots the nearest car still standing (attack-move to its cell), then goes back to guard the Yard against the scouts
+            if (t % 60 == 0)
+            {
+                CellCoord? car = null;
+                int best = int.MaxValue;
+                for (int i = 1; i < s.Units.Capacity; i++)
+                {
+                    if (!s.Units.Slots.IsIndexAlive(i) || s.Units.Player[i] != 1) continue;
+                    string id = s.Setup.Rules.Vehicles[s.Units.TypeIndex[i]].Id;
+                    if (id != "auth_scraper" && id != "auth_carrier") continue;
+                    CellCoord c = s.Units.Position[i].ToCell();
+                    if (c.X < best) { best = c.X; car = c; }
+                }
+                bot.OrderAll(CommandKind.AttackMove, car ?? new CellCoord(43, 28));
+            }
+            if (t % 40 == 0)
+            {
+                int haulerType = SimRules.IndexOf(s.Setup.Rules.Vehicles, "lb_hauler", v => v.Id);
+                for (int i = 1; i < s.Units.Capacity; i++)
+                {
+                    if (!s.Units.Slots.IsIndexAlive(i) || s.Units.Player[i] != 0 || s.Units.TypeIndex[i] != haulerType) continue;
+                    MissionKind k = s.Units.Mission[i];
+                    if (k == MissionKind.Salvage || k == MissionKind.Return) continue;
+                    CellCoord from = s.Units.Position[i].ToCell();
+                    int best = 0; long bestD = long.MaxValue;
+                    for (int w = 1; w < s.Salvage.TicksLeft.Length; w++)
+                    {
+                        if (s.Salvage.TicksLeft[w] <= 0 || s.Salvage.Value[w] <= 0) continue;
+                        long dx = s.Salvage.CellX[w] - from.X, dy = s.Salvage.CellY[w] - from.Y;
+                        if (dx * dx + dy * dy < bestD) { bestD = dx * dx + dy * dy; best = w; }
+                    }
+                    if (best != 0) bot.Send(CommandKind.Harvest, s.Units.Slots.IdOf(i), new CellCoord(s.Salvage.CellX[best], s.Salvage.CellY[best]), (int)ActorKind.Vehicle);
+                }
+            }
+            bot.Idle(20);
+        }
+    }
+
+    /// <summary>
+    /// S48 exp_05 "The South Coast": the soldiers march onto the sandbar and clear the scavengers (the Survey Hover waits on the beach, it is unarmed);
+    /// once the wreck is clear the hover takes the log and runs south into the open sea.
+    /// </summary>
+    private static void Exp05(MissionBot bot)
+    {
+        const int limit = 4800;
+        var wreck = new CellCoord(33, 49);
+        var sea = new CellCoord(30, 61);
+        Simulation s0 = bot.Sim;
+        int hoverType = SimRules.IndexOf(s0.Setup.Rules.Vehicles, "exp_survey_hover", v => v.Id);
+        for (int t = 0; t < limit && !bot.Sim.GameOver && bot.Host.Outcome == MissionOutcome.None; t += 20)
+        {
+            Simulation s = bot.Sim;
+            var cmds = new List<Command>();
+            bool cleared = bot.Host.Dialogue.Any(d => d.Key == "e5.radio.cleared");
+            if (t % 100 == 0)
+                for (int i = 1; i < s.Infantry.Capacity; i++)
+                    if (s.Infantry.Slots.IsIndexAlive(i) && s.Infantry.Player[i] == 0)
+                        cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.AttackMove, s.Infantry.Slots.IdOf(i), default, wreck, (int)ActorKind.Infantry));
+            if (cleared && t % 40 == 0)
+                for (int i = 1; i < s.Units.Capacity; i++)
+                    if (s.Units.Slots.IsIndexAlive(i) && s.Units.Player[i] == 0 && s.Units.TypeIndex[i] == hoverType)
+                        cmds.Add(new Command(s.Tick, 0, bot.NextSeq(), CommandKind.Move, s.Units.Slots.IdOf(i), default, bot.Done("log") ? sea : wreck, (int)ActorKind.Vehicle));
+            if (cmds.Count > 0) bot.Step(cmds);
+            bot.Idle(20);
+        }
+    }
+
+    /// <summary>
+    /// S48 exp_06 "Dredge Rights": deploy the flagship, raise power and the Dredge Works on the beach ash (the script then grants the Hover Yard and sends two Glide Tanks),
+    /// a Hover Yard for the second Skimmer, a billet and a seawall, then marines beside Roque's Glide Tank prototypes; the army holds the beach until tick 4500
+    /// and then marches on the coast battery.
+    /// </summary>
+    private static void Exp06(MissionBot bot)
+    {
+        const int limit = 30000;
+        int ship = SimRules.IndexOf(bot.Sim.Setup.Rules.Vehicles, "exp_command_ship", v => v.Id);
+        EntityId flagship = default;
+        for (int i = 1; i < bot.Sim.Units.Capacity; i++)
+            if (bot.Sim.Units.Slots.IsIndexAlive(i) && bot.Sim.Units.Player[i] == 0 && bot.Sim.Units.TypeIndex[i] == ship) { flagship = bot.Sim.Units.Slots.IdOf(i); break; }
+        Need(flagship != default, bot, "command ship");
+        bot.Send(CommandKind.Deploy, flagship, new CellCoord(16, 48), 0);
+        Need(bot.RunUntilObjective("landing", 600), bot, "landing");
+        CellCoord depot = ExpeditionMissionTestKit.BuildingCell(bot.Sim, "exp_landing_depot");
+
+        CellCoord[] spots = ExpeditionMissionTestKit.Spots(bot.Sim, depot, 3, 10, c => c.Y <= 46 && c.X <= 28);
+        CellCoord[] shore = ExpeditionMissionTestKit.Spots(bot.Sim, new CellCoord(16, 46), 0, 6, c => c.Y >= 43);
+        Need(bot.BuildAndPlace("exp_pile_house", spots), bot, "pile house");
+        Need(bot.BuildAndPlace("exp_pile_house", spots), bot, "second pile house");   // the dredge, the yard, the farms and the billet draw more than one gives
+        Need(bot.BuildAndPlace("exp_dredge_works", shore), bot, "dredge works");
+        bot.Idle(60);   // the script grants the Hover Yard on its next poll
+        Need(bot.BuildAndPlace("exp_hover_yard", spots), bot, "hover yard");
+        bot.Train("exp_skimmer");
+        Need(bot.RunUntilObjective("dredge", 3000), bot, "dredge objective");
+        // The Dredge Works holds only 800: Tank Farms keep the Skimmers working.
+        Need(bot.BuildAndPlace("exp_tank_farm", spots), bot, "tank farm");
+        Need(bot.BuildAndPlace("exp_tank_farm", spots), bot, "second tank farm");
+        bot.Train("exp_skimmer");
+        Need(bot.BuildAndPlace("exp_billet", spots), bot, "billet");
+        Need(bot.BuildAndPlace("exp_pillbox", spots), bot, "pillbox");
+        var hold = new CellCoord(22, 42);
+        var target = new CellCoord(38, 44);
+        bool pushed = false;
+        for (int guard = 0; bot.Sim.Tick < limit && !bot.Sim.GameOver; guard++)
+        {
+            if (guard % 40 == 0) bot.Train("exp_marine");   // the Glide Tank needs the Plotting Room (a reward): Roque's four prototypes arrive by sea instead
+            if (guard % 100 == 0)
+            {
+                if (bot.Count("exp_glide_tank") >= 4 && bot.Sim.Tick >= 4500) pushed = true;
+                ExpeditionMissionTestKit.OrderLand(bot.Sim, CommandKind.AttackMove, pushed ? target : hold);
+            }
+            else bot.Idle();
+        }
     }
 
     /// <summary>Nearest soldier or vehicle (Manhattan) of the players for which <paramref name="accept"/> holds; within <paramref name="reach"/> cells.</summary>

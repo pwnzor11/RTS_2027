@@ -7,10 +7,19 @@ ending = "directorate_ending"
 [[missions]]
 id = "dir_01"
 
+# S48 (C-12): "Night Shift" is play position 2, "The Assembly Bore" play position 3 (design 22 §3.2).
+[[missions]]
+id = "dir_05"
+requires = ["dir_01"]
+
+[[missions]]
+id = "dir_06"
+requires = ["dir_05"]
+
 [[missions]]
 id = "dir_02"
 still = "still_directorate_act2"
-requires = ["dir_01"]
+requires = ["dir_06"]
 
 [[missions]]
 id = "dir_03"

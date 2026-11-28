@@ -30,7 +30,7 @@ public sealed class AuthorityMission02Tests
         Assert.Equal(2, m.Host.VisibleObjectives.Count());   // the mast bonus is hidden until seen
         Assert.Equal("authority", m.Def.Faction);
         Assert.Equal(2, m.Def.Act);
-        Assert.Equal("auth_03", m.Def.Next[0]);
+        Assert.Equal("auth_07", m.Def.Next[0]);   // S48: the S47 pilot auth_07 follows auth_02 in play order
         Assert.Single(m.Host.Timers);
     }
 

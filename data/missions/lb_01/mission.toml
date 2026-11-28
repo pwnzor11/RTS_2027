@@ -12,7 +12,7 @@ act = 1
 # D-289: bot tier-3 median win x 2.5 (docs/balance/s37_balance.md)
 par_seconds = 420
 faction = "left_behind"
-next = "lb_02"
+next = "lb_05"
 locale = "locale.toml"
 
 [starts_with]

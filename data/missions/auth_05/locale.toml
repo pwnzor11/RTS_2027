@@ -1,0 +1,27 @@
+# Authority 05 "Hatch Country" locale. Speaker: Brigadier Wrenfield (leader_auth_wrenfield) only.
+# Voice lines are text only for now: there is no [voice] table, so no audio is looked up and a missing file can never error.
+"a5.start" = "Close the three surface hatches and pull down the loudspeaker pole."
+"a5.radio.start" = "Wrenfield. Those raiders did not fall out of the sky. Find their doors and shut them. Engineers can take a hatch; rockets can bring one down."
+"a5.radio.pole" = "That is the loudspeaker. It is reading names. Pull it down before it gets to yours."
+"a5.hatch1" = "One hatch is closed."
+"a5.hatch2" = "Two hatches are closed."
+"a5.radio.hatch1" = "One door shut. Their patrols will come up to see why. Keep moving."
+"a5.radio.hatch2" = "Two shut. The keepers log every door in a book, and there is a dead-drop north-east of the pole. Fetch it if you can. One more door and the road is quiet."
+"a5.patrol" = "A Directorate patrol is coming up from the north."
+"a5.radio.patrol" = "Foot patrol out of the north. Do not let it pin you at a hatch."
+"a5.hatches" = "All three hatches are closed."
+"a5.radio.hatches" = "All three doors are shut. Now that pole."
+"a5.pole" = "The loudspeaker pole is down."
+"a5.radio.pole.down" = "Quiet. First time that hill has been quiet in a year."
+"a5.log" = "The hatch-keepers' logbook is recovered."
+"a5.radio.log" = "A logbook. Dull, dry, dated. Good. Bring it home with you."
+"a5.win" = "The hatch country is silent."
+"a5.radio.win" = "That is the road clear to the junction. Come home, Commander. Bring the engineers."
+"a5.lost.net" = "The loudspeaker has finished reading out the column's name. Every hatch in the country is awake."
+"a5.lost.column" = "The column is lost. Nobody is left to close the hatches."
+
+# Objective and timer labels
+"a5.obj.hatches" = "Close the three surface hatches"
+"a5.obj.pole" = "Pull down the loudspeaker pole"
+"a5.obj.log" = "Recover the hatch-keepers' logbook"
+"a5.timer.net" = "Name read out"

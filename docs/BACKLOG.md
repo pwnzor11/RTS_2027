@@ -34,6 +34,13 @@ holds, YOUR ORDERS status, fight detail, `--random-counters`), A-09 (design only
 auth_07; 31 missions remain, C-12), A-06 (layout-2 data keys and plan docs/balance/s47_layout2_plan.md; tuning in progress). Field Manual rebuilt
 (Marine 130, Glide Tank 900). New rows: T-11, T-12, C-12, M-28b. Still open: everything else below.
 
+## Status after session 48 (2026-11-28)
+Done on integ-s48 (D-340..D-344): B-01 f1 (per-map balance, landed by PR #131; further screens no change, Q-101); C-12 wave 1 (act 1 of all four
+campaigns: auth_05, auth_06, dir_05, dir_06, lb_05, lb_06, exp_05, exp_06; maps rustbelt_mill and tern_point; pars from sweep sw48b; 23 missions
+remain); the Q-94 upgrade gate; M-28b (splash, stealth, blackout, sonar on a live index; aura recompute stays, measured 0.017 ms/tick);
+T-11 (resolve_rules key list current, `--strict`); Field Manual rebuilt (Rust Belt sea edge, "Ash resist" on unit pages). T-12: the test-side
+fix failed on Windows CI (it also broke the handshake test) and was reverted; still open. New: Q-100 (lb_06 goal), Q-101 (balance aim).
+
 ## 0. Before any of it: the balance gate and the freeze
 - **B-00 (first, small):** D-311 items 5-11 (production pause on a lost prerequisite, non-lethal Second Drift storm + no_build_threshold,
   Bore not a base, refused order keeps the queue, AI rebuild while broke, mop-up without respond_to_attacks, Directorate anti-air) live on

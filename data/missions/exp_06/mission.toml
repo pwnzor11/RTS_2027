@@ -1,0 +1,137 @@
+# Expedition 06: Dredge Rights (S48 C-12 wave 1, design 22 section 3.4). Play position 3 of the Expedition campaign (after exp_05, before exp_02), act 1.
+# Build and destroy on the south coast of Tern Point: deploy the Command Ship on the beach, put a Dredge Works and Skimmers on the ash, then break the Authority coast battery that shells the shallows.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1] (copied from the header of tern_point.map.toml; `battery` is this mission's own). Pre-placed actors are placed before tick 0 (setup log).
+
+[mission]
+title = "Dredge Rights"
+map = "tern_point.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+par_seconds = 720   # S48 sweep sw48b (D-289): tier-3 median win 5601 ticks x 2.5, rounded up to a minute
+faction = "expedition"
+next = "exp_02"
+locale = "locale.toml"
+
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
+[starts_with]
+# exp_05's starts_with plus its unlocks (the dredge kit). The Hover Yard and the Glide Tank are the reward: the script grants them once the dredge stands.
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_tank_farm", "exp_up_composite_armour", "exp_up_deep_survey", "exp_up_fast_charging", "exp_up_guided_shells", "exp_up_hardened_hulls", "exp_up_sonar_nets", "exp_up_vacuum_cores", "exp_up_veteran_drill"]
+
+[unlocks_on_win]
+tech = ["exp_hover_yard", "exp_glide_tank", "exp_hoverlander", "exp_provision_store", "exp_plotting_room", "exp_gun_battery"]
+
+[[players]]
+slot = 0
+name = "Second Relief Fleet"
+role = "human"
+team = 0
+cash = 4000
+# Only these may be built (production chain prerequisites still apply). The Command Ship deploys into the Landing Depot on its own. The script can Tech.Grant more.
+tech = ["exp_pile_house", "exp_billet", "exp_marine", "exp_pillbox", "exp_beacon", "exp_anchorage", "exp_dredge_works", "exp_skimmer", "exp_tank_farm", "exp_up_composite_armour", "exp_up_deep_survey", "exp_up_fast_charging", "exp_up_guided_shells", "exp_up_hardened_hulls", "exp_up_sonar_nets", "exp_up_vacuum_cores", "exp_up_veteran_drill"]
+
+[[players]]
+slot = 1
+name = "Authority coast battery"
+role = "ai"
+team = 1
+cash = 1200
+
+# The beach the fleet lands on (the start), the ash shallows, the wreck on the sandbar, the open sea.
+[zones.beach_landing]
+rect = [8, 36, 28, 49]
+
+[zones.home_inland]
+rect = [30, 10, 52, 28]
+
+[zones.sea_s]
+rect = [0, 53, 43, 63]
+
+[zones.relief_wreck]
+rect = [28, 48, 38, 54]
+
+[zones.dredge_shallows]
+rect = [4, 50, 27, 57]
+
+[zones.platform]
+rect = [44, 48, 50, 60]
+
+[zones.sea_spawn]
+rect = [0, 60, 40, 63]
+
+# The Authority coast battery: on the clear ground east of the beach, three cells from the sandbar. Its guns reach the wreck and the eastern shallows.
+[zones.battery]
+rect = [34, 41, 43, 47]
+
+# The fleet: the Command Ship in the shallows off the beach.
+[[actors]]
+type = "exp_command_ship"
+player = 0
+cell = [16, 48]
+tag = "flagship"
+
+# Authority: the coast battery (power, a barracks, two turrets, three howitzers and a few riflemen). The script sends the columns.
+[[actors]]
+type = "auth_power"
+player = 1
+cell = [37, 42]
+tag = "bat_power"
+
+[[actors]]
+type = "auth_barracks"
+player = 1
+cell = [40, 42]
+tag = "bat_barracks"
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [35, 46]
+tag = "bat_turret1"
+
+[[actors]]
+type = "auth_turret"
+player = 1
+cell = [41, 46]
+tag = "bat_turret2"
+
+[[actors]]
+type = "auth_howitzer"
+player = 1
+cell = [36, 44]
+tag = "bat_gun1"
+
+[[actors]]
+type = "auth_howitzer"
+player = 1
+cell = [38, 44]
+tag = "bat_gun2"
+
+[[actors]]
+type = "auth_howitzer"
+player = 1
+cell = [40, 44]
+tag = "bat_gun3"
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [37, 45]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [39, 45]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [38, 46]
+
+[[actors]]
+type = "auth_rifleman"
+player = 1
+cell = [36, 46]

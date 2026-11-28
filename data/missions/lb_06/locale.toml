@@ -1,0 +1,25 @@
+# Left Behind 06 "Salvage Rights" locale. Speaker: Jessup Calloway-Ross (leader_lb_calloway_ross), war-captain of the caravans.
+# Voice lines are text only for now: there is no [voice] table, so no audio is looked up and a missing file can never error.
+"lb6.start" = "Open the wrecked train, strip it with the haulers and bank the ash before the recovery crews arrive."
+"lb6.radio.start" = "Commander, Calloway-Ross. The train is yours until the crews come. Shoot a car open, send a hauler, take the next one."
+"lb6.radio.hint" = "A wreck rots in a few minutes. Open the cars two or three at a time, not all at once."
+"lb6.scouts" = "Authority scouts are coming down from the north."
+"lb6.radio.scouts" = "Scouts out of the mill town. They have seen the smoke. Keep them off the haulers."
+"lb6.half" = "Half the time is gone."
+"lb6.radio.half" = "Half the clock is gone. Count your ash, Commander."
+"lb6.late" = "The recovery crews are close."
+"lb6.radio.late" = "Lamps on the rail to the east. Take what you have and finish it."
+"lb6.engine" = "The engine car is open. Its strongbox is ours."
+"lb6.radio.engine" = "That is the engine. The strongbox is still on the board, Commander, and so is the ash."
+"lb6.win" = "The ash is banked. The column is gone before the crews arrive."
+"lb6.radio.win" = "That is enough. Pull out. The crews can have the rust."
+"lb6.missed" = "The recovery crews have arrived. The train is theirs again."
+"lb6.lost.column" = "The column is lost. Nobody is left to strip the train."
+"lb6.lost.haulers" = "All three haulers are lost. Nobody is left to strip the train."
+"lb6.lost.yard" = "The yard is lost. There is nowhere left to drop the ash."
+
+# Objective and timer labels
+"lb6.obj.open" = "Shoot open all eight cars of the train"
+"lb6.obj.bank" = "Bank 1200 ash at the Yard"
+"lb6.obj.engine" = "Open the engine car and take its strongbox"
+"lb6.timer.crews" = "Recovery crews arrive"

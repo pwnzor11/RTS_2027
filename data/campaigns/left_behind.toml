@@ -9,10 +9,19 @@ open_after = ["auth_02", "dir_02"]
 [[missions]]
 id = "lb_01"
 
+# S48 (C-12): "Under One Banner" is play position 2, "Salvage Rights" play position 3 (design 22 §3.3).
+[[missions]]
+id = "lb_05"
+requires = ["lb_01"]
+
+[[missions]]
+id = "lb_06"
+requires = ["lb_05"]
+
 [[missions]]
 id = "lb_02"
 still = "still_left_behind_act2"
-requires = ["lb_01"]
+requires = ["lb_06"]
 
 [[missions]]
 id = "lb_03"

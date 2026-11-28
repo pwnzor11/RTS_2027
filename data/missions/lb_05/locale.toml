@@ -1,0 +1,33 @@
+# Left Behind 05 "Under One Banner" locale. Speakers: Jessup Calloway-Ross (leader_lb_calloway_ross), war-captain of the caravans;
+# Speaker Marrow Tindall (leader_lb_tindall), who asks that the other bands' names stay on the flag.
+# Voice lines are text only for now: there is no [voice] table, so no audio is looked up and a missing file can never error.
+"l5.start" = "Break the Two Fires hold on the road, then the well of Nobody's Daughter."
+"l5.radio.start" = "Commander, Calloway-Ross. Nobody's Daughter and two others hold the west well under their own flags. One flag. Start with the hold on the road."
+"l5.radio.tindall" = "Speaker Tindall. Their names stay on the flag, Commander. Every one. I will have the ledger read."
+"l5.radio.hint" = "The hold on the road has a Dynamo Rig and a Muster Rig. Slingers break rigs. Nests are only nests."
+"l5.radio.rig" = "That is Nobody's Daughter, the old rig. If she can be taken and not burned, take her. A Tinker can do it while she is hurt."
+"l5.muster" = "The hold has given up the road and is marching on the well."
+"l5.radio.muster" = "Their crews are walking to the well. Now it is two bands at one gate. Should have been quicker, Commander."
+"l5.outpost.down" = "The hold on the road is broken."
+"l5.radio.outpost" = "The road is ours. Two Fires and Long Haul are in the ledger now. Get home. The well will answer."
+"l5.radio.names" = "Their names go on the flag. All of them. Thank you, Commander."
+"l5.answer" = "Nobody's Daughter has sent its answer at the camp."
+"l5.radio.answer" = "The well is sending everything it has at the camp. Hold the road home."
+"l5.answer.down" = "The answer is broken. The well is open."
+"l5.radio.answerdown" = "Their answer is a scrap heap. The well is thin now. Go and take it."
+"l5.well.down" = "The well's Dynamo Rig and Muster Rig are down."
+"l5.radio.well" = "Dynamo and Muster Rig down. The well is ours."
+"l5.mother" = "Nobody's Daughter's Mother Rig is ours, whole."
+"l5.radio.mother" = "She is ours. Whole, and flying the one flag. Write her name large."
+"l5.win" = "The west well is under the one banner."
+"l5.radio.win" = "Three bands, one banner. Write it in the ledger. Small. The Authority is still owed."
+"l5.radio.winnames" = "The names stay on it. Every one. That was all I asked."
+"l5.lost.rig" = "The Mother Rig is lost. The caravan scatters."
+"l5.lost.time" = "The Gathering has moved on. The well still flies its own flag."
+
+# Objective and timer labels (the HUD shows the locale text when a label is a key)
+"l5.obj.outpost" = "Break the Two Fires hold: its Dynamo Rig and Muster Rig"
+"l5.obj.well" = "Break Nobody's Daughter's well: its Dynamo Rig and Muster Rig"
+"l5.obj.mother" = "Take Nobody's Daughter's Mother Rig whole"
+"l5.timer.muster" = "The hold marches on the well"
+"l5.timer.gathering" = "The Gathering moves on"

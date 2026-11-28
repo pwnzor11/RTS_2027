@@ -62,7 +62,10 @@ public sealed class MissionParTests : IDisposable
             Assert.True(par == 0 || par is >= 60 and <= 36000, $"{Path.GetFileName(folder)}: par {par}");
             if (par > 0) withPar++;
         }
-        Assert.Equal(13, withPar);   // S47: 12 measured pars plus auth_07 (sw47a)
+        // S48 (C-12 wave 1): each new mission ships a placeholder par until its sweep; count the ones that exist so parallel packages do not collide.
+        int s48 = new[] { "auth_05", "auth_06", "dir_05", "dir_06", "lb_05", "lb_06", "exp_05", "exp_06" }
+            .Count(id => Directory.Exists(MissionLoader.FolderOf(TestData.DataDir, id)));
+        Assert.Equal(13 + s48, withPar);   // S47: 12 measured pars plus auth_07 (sw47a); S48: plus the eight wave-1 pars (sw48b)
     }
 
     [Fact]
@@ -79,6 +82,8 @@ public sealed class MissionParTests : IDisposable
         {
             ["auth_01"] = 480, ["auth_03"] = 540, ["auth_04"] = 540, ["dir_01"] = 300, ["dir_02"] = 1020, ["exp_01"] = 660,
             ["exp_02"] = 1020, ["exp_03"] = 900, ["exp_04"] = 1680, ["lb_01"] = 420, ["lb_02"] = 900, ["lb_04"] = 1260,
+            // S48 wave 1 (sweep sw48b, D-289)
+            ["auth_05"] = 240, ["auth_06"] = 720, ["dir_05"] = 300, ["dir_06"] = 1680, ["lb_05"] = 360, ["lb_06"] = 120, ["exp_05"] = 120, ["exp_06"] = 720,
         };
         foreach ((string id, int par) in expected)
             Assert.Equal(par, MissionLoader.Load(MissionLoader.FolderOf(TestData.DataDir, id)).ParSeconds);

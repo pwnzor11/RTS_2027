@@ -7,10 +7,19 @@ ending = "authority_ending"
 [[missions]]
 id = "auth_01"
 
+# S48 (C-12): "Hatch Country" is play position 2, "The Mill Town" play position 3 (design 22 §3.1).
+[[missions]]
+id = "auth_05"
+requires = ["auth_01"]
+
+[[missions]]
+id = "auth_06"
+requires = ["auth_05"]
+
 [[missions]]
 id = "auth_02"
 still = "still_authority_act2"
-requires = ["auth_01"]
+requires = ["auth_06"]
 
 # S47 pilot (D-333, D-337): "The Defector" is play position 5 of the 12-mission plan; with only five Authority missions built it sits between
 # auth_02 and auth_03 (the list order is the play order). auth_08 will require it later.

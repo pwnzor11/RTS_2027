@@ -14,8 +14,10 @@ act = 1
 faction = "authority"
 
 # Only these may be built (production chain prerequisites still apply). The scraper arrives free with the refinery.
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [[players]]
 slot = 0
@@ -23,7 +25,7 @@ name = "Authority"
 role = "human"
 team = 0
 cash = 4500  # s22 M13-13 (D-223): 3000 -> 4500
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [[players]]
 slot = 1

@@ -12,11 +12,13 @@ act = 1
 # D-289: bot tier-3 median win x 2.5 (docs/balance/s37_balance.md)
 par_seconds = 480
 faction = "authority"
-next = "auth_02"
+next = "auth_05"
 locale = "locale.toml"
 
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
 [starts_with]
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_factory"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_factory", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [unlocks_on_win]
 tech = ["auth_turret"]
@@ -28,7 +30,7 @@ role = "human"
 team = 0
 cash = 3500
 # Only these may be built (production chain prerequisites still apply). The script can Tech.Grant more.
-tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_factory"]
+tech = ["auth_power", "auth_refinery", "auth_barracks", "auth_rifleman", "auth_jeep", "auth_wall", "auth_factory", "auth_grouting", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot"]
 
 [[players]]
 slot = 1

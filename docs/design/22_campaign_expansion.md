@@ -42,13 +42,11 @@ built later.
 
 ### Still open (owner; options with trade-offs, my recommendation last)
 
-**Q5 · Upgrades in the campaign.** As far as I read the code, upgrades are **not** mission-gated today: `Simulation.CanResearch`
-does not consult `UnlockFilter`, so any upgrade whose prerequisites are met can be researched in any mission.
-(a) Leave it: upgrades are free in missions.
-(b) Gate upgrades like units (small code change: CanResearch asks the filter; the mission allow-list holds upgrade ids) and make
-upgrades the reward of several new missions.
-(c) Gate only tier-3 upgrades.
-**Recommendation: (b)**, as its own small package before the new missions; the outline lists upgrade rewards marked "(if Q5 b)".
+**Q5 · Upgrades in the campaign.** ANSWERED (D-341): (b). Upgrades are gated like units: `Simulation.CanResearch` asks `UnlockFilter` with
+`ProductionCategory.Upgrade`, `MissionHost.IsTypeAllowed` maps it to the upgrade id, and a restricted mission player may research an upgrade only
+if its id is in the granted set (starts_with, unlocks_on_win carry-over, `Tech.Grant`). Built [M16-C-12]: every built mission whose human could
+research before lists all of its faction's upgrades (the "(Q5 b)" reward upgrades are not removed yet; the reward missions will move them);
+skirmish and AI players are unchanged.
 
 **Q6 · Maps.** Three story maps exist (rustbelt_m2 64x64, glass_coast_e1 96x96, ash_reckoning 96x96); story maps stay hand-made
 (design 16 §3.6), made by freezing a generated map and editing it.
@@ -340,6 +338,7 @@ exp_12 takes exp_04's landing. Suggestion for a later text package: one new cond
 bonus (the Tern Point ledger, the spared battalion, the Kettle's speaker, Aldersey's log), owner-approved text (D-086).
 
 ## 5 · Build waves, cost and changes to built files
+- **Status (session 48):** wave 1 (act 1 of all four, with rustbelt_mill and tern_point) is built and swept (D-343). Owner answers Q5-Q9: D-341.
 - **Waves:** pilot (auth_07) → owner review → act 1 for all four (8 missions) → act 2 → act 3 → act 4. The three new maps come in
   the wave that first needs them (rustbelt_mill in act 1, annex_foothills in act 2, tern_point in act 1 for the Expedition).
 - **Size totals:** S 10, M 22, L 0, plus three maps (M each). All 32 are required (D-337).

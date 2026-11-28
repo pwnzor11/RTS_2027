@@ -1,0 +1,222 @@
+# Left Behind 06: Salvage Rights (S48 C-12 wave 1, design 22 section 3.3). Play position 3 of the Left Behind campaign, act 1.
+# Commando with an economy goal: haulers strip the wrecked Authority supply train on rustbelt_mill before the recovery crews arrive.
+# No base: a packed Mother Rig (stays packed), one Yard as the drop point, three haulers and a small war band. Nothing can be built.
+# Zones are inclusive cell rectangles [x0, y0, x1, y1], copied from the map header of rustbelt_mill. Pre-placed actors are placed before tick 0.
+
+[mission]
+title = "Salvage Rights"
+map = "rustbelt_mill.map.toml"
+script = "mission.lua"
+briefing = "briefing.md"
+seed = 2027
+schema = 2
+act = 1
+par_seconds = 120   # S48 sweep sw48b (D-289): tier-3 median win 861 ticks x 2.5, rounded up to a minute
+faction = "left_behind"
+next = "lb_02"
+locale = "locale.toml"
+
+# Q-94 / D-341 Q5 (b): upgrade ids are gated like units. Every upgrade of the faction stays listed here (and in the human tech) so no mission loses one;
+# the "(Q5 b)" reward upgrades (design 22) are NOT removed yet, the new reward missions will move them later.
+[starts_with]
+# S48 ASSUMED: lb_01's end kit (its starts_with plus lb_garage_rig) plus lb_05's unlocks lb_buggy and lb_gleaner. lb_05 lands from wp/s48-lb05.
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_still_rig", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_up_ash_wraps", "lb_up_grapple", "lb_up_patchwork", "lb_up_quick_pack", "lb_up_salvage_rights", "lb_up_scrap_plate"]
+
+[unlocks_on_win]
+tech = ["lb_hauler", "lb_lookout"]
+
+[[players]]
+slot = 0
+name = "The Drift"
+role = "human"
+team = 0
+cash = 0
+# Only these may be built (production chain prerequisites still apply). There is no yard to build them from: this only keeps the allow-list honest.
+tech = ["lb_mother_rig", "lb_dynamo_rig", "lb_muster_rig", "lb_yard", "lb_scavenger", "lb_hook_runner", "lb_slinger", "lb_spike_nest", "lb_still_rig", "lb_garage_rig", "lb_buggy", "lb_gleaner", "lb_up_ash_wraps", "lb_up_grapple", "lb_up_patchwork", "lb_up_quick_pack", "lb_up_salvage_rights", "lb_up_scrap_plate"]
+
+# The wrecked train, its picket and the recovery crews are all driven by the script (role "neutral" keeps the AI off the cars).
+[[players]]
+slot = 1
+name = "Authority recovery"
+role = "neutral"
+team = 1
+cash = 0
+
+[zones.survey_camp]
+rect = [38, 25, 45, 30]
+
+[zones.train_wreck]
+rect = [46, 29, 56, 34]
+
+[zones.rail_e]
+rect = [57, 30, 63, 33]
+
+[zones.mill_town]
+rect = [17, 14, 46, 30]
+
+[zones.spawn_e]
+rect = [61, 29, 63, 34]
+
+[zones.spawn_n]
+rect = [27, 0, 35, 2]
+
+[zones.spawn_s]
+rect = [27, 61, 35, 63]
+
+# The Drift column, parked at the old survey camp west of the train.
+
+[[actors]]
+type = "lb_mother_rig_packed"
+player = 0
+cell = [39, 26]
+tag = "rig"
+
+[[actors]]
+type = "lb_yard"
+player = 0
+cell = [40, 28]
+tag = "yard"
+
+[[actors]]
+type = "lb_hauler"
+player = 0
+cell = [43, 27]
+tag = "hauler1"
+
+[[actors]]
+type = "lb_hauler"
+player = 0
+cell = [44, 27]
+tag = "hauler2"
+
+[[actors]]
+type = "lb_hauler"
+player = 0
+cell = [45, 27]
+tag = "hauler3"
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [38, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [39, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [40, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [41, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [42, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [43, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [44, 25]
+
+[[actors]]
+type = "lb_slinger"
+player = 0
+cell = [45, 25]
+
+[[actors]]
+type = "lb_scavenger"
+player = 0
+cell = [38, 29]
+
+[[actors]]
+type = "lb_scavenger"
+player = 0
+cell = [39, 29]
+
+[[actors]]
+type = "lb_hook_runner"
+player = 0
+cell = [42, 29]
+
+[[actors]]
+type = "lb_hook_runner"
+player = 0
+cell = [43, 29]
+
+[[actors]]
+type = "lb_buggy"
+player = 0
+cell = [41, 26]
+
+[[actors]]
+type = "lb_buggy"
+player = 0
+cell = [42, 26]
+
+# The wrecked train on the rail lane y32: six scrapers and two carriers (x49-56, out of the camp's gun range), then the engine car in the east. Unarmed; shooting one leaves a wreck for the haulers.
+
+[[actors]]
+type = "auth_scraper"
+player = 1
+cell = [49, 32]
+tag = "car1"
+
+[[actors]]
+type = "auth_scraper"
+player = 1
+cell = [50, 32]
+tag = "car2"
+
+[[actors]]
+type = "auth_scraper"
+player = 1
+cell = [51, 32]
+tag = "car3"
+
+[[actors]]
+type = "auth_scraper"
+player = 1
+cell = [52, 32]
+tag = "car4"
+
+[[actors]]
+type = "auth_scraper"
+player = 1
+cell = [53, 32]
+tag = "car5"
+
+[[actors]]
+type = "auth_scraper"
+player = 1
+cell = [54, 32]
+tag = "car6"
+
+[[actors]]
+type = "auth_carrier"
+player = 1
+cell = [55, 32]
+tag = "car7"
+
+[[actors]]
+type = "auth_carrier"
+player = 1
+cell = [56, 32]
+tag = "car8"
+
+[[actors]]
+type = "auth_carrier"
+player = 1
+cell = [58, 32]
+tag = "engine"

@@ -11,7 +11,7 @@ Mirrors (read on 2026-11-11, repo main):
   SupplyRules.SupplyOf  explicit supply >= 0, else cost band
   RulesDeriver.cs  upgrade effects (set / add / mul per mille, truncating)
 
-Usage:  python3 resolve_rules.py [repo_root] [out_json]
+Usage:  python3 resolve_rules.py [repo_root] [out_json] [--strict]   (--strict: exit 1 if any loader problem, e.g. an unknown key)
 Import: from resolve_rules import load_rules  -> dict (same content as the JSON)
 """
 import json
@@ -27,27 +27,57 @@ LEPTONS_PER_CELL = 256
 # ---- defaults, copied from the loaders (optional keys only; required keys have no default) -------------------
 MOBILE_V3 = dict(aura_radius=0, aura_rof_permille=1000, aura_speed_permille=1000, aura_targets=[], rad_resist_permille=0,
                  stealth=False, death_weapon="", jam_radius=0, seismic_radius=0)
+# S44-S47 keys (UnitRulesLoader, StructureRulesLoader, WeaponRulesLoader, UpgradeRulesLoader) are listed here with the loader's
+# default, so every key the C# loader accepts is also accepted here (session 48, T-11).
+# Stat-card choice, per key: SHOWN = a number or capability a player reads to decide (fed to the card; the card code is not in this
+# script); IGNORED = a reference to another id, or an internal, AI or art key that no card shows (the same as today's storm_*, salvo_*).
 VEHICLE_DEFAULTS = dict(MOBILE_V3, harvest_capacity=0, build_time=0, tunnel_size="none", passengers=0, deploys_into="", tier=1,
                         unpacks_into="", pack_ticks=0, salvage_rate=0, raider=False, raider_one_use=False, drops_blackout_ticks=0,
                         aura_repair_permille=0, tow_bonus_permille=0, supply=-1, draw_scale_permille=1000, deep_only=False,
                         submerges=False, sonar_radius=0, aircraft_slots=0, sortie_ticks=0, ammo=0, rearm_ticks=0, unload_ticks=0,
-                        vehicle_slots=0, one_use=False, buildable=True)   # D-205 (M13-11) keys, as UnitRulesLoader
+                        vehicle_slots=0, one_use=False, buildable=True,   # D-205 (M13-11) keys, as UnitRulesLoader
+                        built_at="",           # IGNORED (production site, already an edge in the tech tree)
+                        bay_repair=0,          # SHOWN (repair rate in a bay)
+                        dive_ticks=0,          # SHOWN (time to submerge)
+                        secondary_weapon="",   # SHOWN (weapon row)
+                        tertiary_weapon="",    # SHOWN (weapon row)
+                        mine_capacity=0,       # SHOWN
+                        mine_lay_ticks=0,      # SHOWN
+                        mine_damage=0,         # SHOWN
+                        mine_warhead="",       # IGNORED (warhead id; damage is shown)
+                        mine_trigger_radius=0, # SHOWN
+                        mine_sweep_radius=0,   # SHOWN
+                        mine_sweep_ticks=0,    # SHOWN
+                        mine_restock_ticks=0,  # SHOWN
+                        beacon_drop="")        # IGNORED (action link to a building id)
 INFANTRY_DEFAULTS = dict(MOBILE_V3, build_time=0, tunnel_size="S", engineer=False, tier=1, salvage_rate=0, raider=False,
-                         raider_one_use=False, ash_stealth_delay_ticks=0, ash_stealth_threshold=0, aura_repair_permille=0, supply=-1)
+                         raider_one_use=False, ash_stealth_delay_ticks=0, ash_stealth_threshold=0, aura_repair_permille=0, supply=-1,
+                         swims=False,          # SHOWN (capability, like "Fires at")
+                         beacon_build="")      # IGNORED (action link to a building id)
 BUILDING_DEFAULTS = dict(category="structure", produces="", build_time=0, storage=0, refinery=False, dock=[0, 0], free_unit="",
                          wall=False, needs_power=False, buildable=True, entrance="none", ticks_per_point=20, researches=False,
                          gate=False, seismic_radius=0, sees_through_blackout=False, jam_radius=0, superweapon="",
                          superweapon_charge_ticks=0, superweapon_entrance_range=0, morphs_into="", morph_ticks=0, tier=1,
                          garrison=0, garrison_range_bonus=256, garrison_rof_permille=750, packs_into="", pack_ticks=0,
                          supply_provided=0, supply_unstocked=-1, water_building=False, beachhead_source=False,
-                         beachhead_radius=0, shipment_dock=False, sonar_radius=0)
+                         beachhead_radius=0, shipment_dock=False, sonar_radius=0,
+                         heavy_yard=False,          # SHOWN (capability: builds heavy vehicles)
+                         ship_repair_permille=0,    # SHOWN (repair rate for ships)
+                         ship_repair_radius=2)      # SHOWN (repair range in cells)
 WARHEAD_DEFAULTS = dict(contaminate=0, decontaminate=0, blackout_ticks=0, hits_burrowed=False,
                         bonus_vs_entrance_percent=100, foam_ticks=0, garrison_damage_percent=0, storm_radius=0, storm_ticks=0,
                         storm_contaminate_step=0, storm_contaminate_cap=64, storm_speed_permille=0, salvo_missiles=0,
-                        salvo_ticks=0, salvo_radius=0, salvo_damage=0, salvo_warn_ticks=0, salvo_splash=1)
-WEAPON_DEFAULTS = dict(targets="ground")
+                        salvo_ticks=0, salvo_radius=0, salvo_damage=0, salvo_warn_ticks=0, salvo_splash=1,
+                        tether_ticks=0,            # IGNORED (warhead effect, as storm_* and salvo_*)
+                        tether_speed_permille=1000)  # IGNORED (warhead effect)
+WEAPON_DEFAULTS = dict(targets="ground", needs_spotter=False)   # needs_spotter: SHOWN (a firing condition, like "Fires at")
 UPGRADE_DEFAULTS = dict(build_time=0, prerequisites=[], effect="", tier=1, effects=[], pack_ticks_permille=0, salvage_permille=0,
-                        plunder_permille=0, repairs_vehicles_at_range=False)
+                        plunder_permille=0, repairs_vehicles_at_range=False,
+                        wreck_value_permille=0,    # SHOWN (upgrade effect number)
+                        repair_range_cells=0,      # SHOWN
+                        repair_rate_permille=0,    # SHOWN
+                        breach_ticks=0,            # SHOWN
+                        breach_cooldown_ticks=0)   # SHOWN
 
 VEHICLE_KEYS = {"speed", "max_health", "locomotion", "turn_rate", "armor", "sight", "primary_weapon", "has_turret",
                 "turret_turn_rate", "crusher", "cost", "prerequisites", "faction", "veteran"} | set(VEHICLE_DEFAULTS)
@@ -56,7 +86,7 @@ INFANTRY_KEYS = {"speed", "max_health", "armor", "sight", "primary_weapon", "cos
 BUILDING_KEYS = {"footprint_w", "footprint_h", "max_health", "armor", "sight", "primary_weapon", "cost", "power", "prerequisites",
                  "provides", "faction", "exit", "water"} | set(BUILDING_DEFAULTS)
 WARHEAD_KEYS = {"versus", "splash", "hits_allies"} | set(WARHEAD_DEFAULTS)
-WEAPON_KEYS = {"damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead", "targets"}
+WEAPON_KEYS = {"damage", "range", "min_range", "rate_of_fire", "projectile_speed", "warhead"} | set(WEAPON_DEFAULTS)
 UPGRADE_KEYS = {"faction", "cost"} | set(UPGRADE_DEFAULTS)
 
 # Attributes RulesDeriver actually applies, per target kind (anything else is silently ignored by the sim).
@@ -284,8 +314,10 @@ def damage(dmg, warhead, armor):
 
 
 if __name__ == "__main__":
-    repo = sys.argv[1] if len(sys.argv) > 1 else REPO
-    out = sys.argv[2] if len(sys.argv) > 2 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "rules_resolved.json")
+    args = [a for a in sys.argv[1:] if a != "--strict"]
+    strict = len(args) != len(sys.argv) - 1
+    repo = args[0] if len(args) > 0 else REPO
+    out = args[1] if len(args) > 1 else os.path.join(os.path.dirname(os.path.abspath(__file__)), "rules_resolved.json")
     r = load_rules(repo)
     with open(out, "w") as f:
         json.dump(r, f, indent=1, sort_keys=True)
@@ -294,3 +326,6 @@ if __name__ == "__main__":
           f"{len(r['loader_problems'])} loader problems")
     for p in r["loader_problems"]:
         print("  PROBLEM", p)
+    if strict and r["loader_problems"]:
+        print(f"STRICT: {len(r['loader_problems'])} loader problem(s); a data key the loader would reject, or a bad reference, fails the build")
+        sys.exit(1)

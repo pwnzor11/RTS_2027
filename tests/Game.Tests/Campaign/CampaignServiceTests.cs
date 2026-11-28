@@ -76,14 +76,14 @@ public sealed class CampaignServiceTests : IDisposable
     public void Mission_states_are_next_then_completed_then_unlock_the_following_one()
     {
         CampaignService s = Service();
-        Assert.Equal(new[] { "dir_01", "dir_02", "dir_03", "dir_04" }, s.Campaign("directorate").Missions.Select(m => m.Id));
-        Assert.Equal(new[] { CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked },
+        Assert.Equal(new[] { "dir_01", "dir_05", "dir_06", "dir_02", "dir_03", "dir_04" }, s.Campaign("directorate").Missions.Select(m => m.Id));
+        Assert.Equal(new[] { CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked },
             s.Missions("directorate").Select(m => m.State));
         Assert.All(s.Missions("directorate"), m => Assert.Equal(Directory.Exists(Path.Combine(DataDir, "missions", m.Id)), m.Exists));   // written or placeholder
         Assert.True(s.Missions("authority").First(m => m.Id == "auth_01").Exists);
 
         Write(s, "directorate", CampaignProgress.New("directorate").WithWin("dir_01", 1, Array.Empty<string>()));
-        Assert.Equal(new[] { CampaignMissionState.Completed, CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked },
+        Assert.Equal(new[] { CampaignMissionState.Completed, CampaignMissionState.Next, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked, CampaignMissionState.Locked },
             s.Missions("directorate").Select(m => m.State));
         Assert.Equal(CampaignMissionState.Locked, s.StateOf("directorate", "dir_09", CampaignProgress.New("directorate")));
     }
@@ -129,7 +129,7 @@ public sealed class CampaignServiceTests : IDisposable
         CampaignService s = Service();
         Write(s, "authority", CampaignProgress.New("authority").WithWin("x", 1, new[] { "auth_tank" }));
         CampaignStart start = s.Start(RulesDir, "authority", "auth_01", 2);
-        Assert.Equal(new[] { "auth_barracks", "auth_factory", "auth_jeep", "auth_power", "auth_refinery", "auth_rifleman", "auth_tank", "auth_wall" }, start.AllowList);
+        Assert.Equal(new[] { "auth_barracks", "auth_factory", "auth_grouting", "auth_jeep", "auth_power", "auth_refinery", "auth_rifleman", "auth_tank", "auth_up_composite_armour", "auth_up_convoy_drill", "auth_up_flak_vests", "auth_up_signals_net", "auth_up_sodium_lamps", "auth_up_tungsten_shot", "auth_wall" }, start.AllowList);   // S48 Q-94: the faction upgrades are listed
         Assert.Equal(2, start.Difficulty);
         Assert.True(Allowed(start.Game.Sim, "auth_tank"));
         Assert.True(Allowed(start.Game.Sim, "auth_jeep"));

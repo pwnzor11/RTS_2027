@@ -800,3 +800,40 @@ Pull main first (your folder was on eda0f0e3, two sessions behind), then rebuild
 - **Not built, design only:** the LLM-chosen build plan (A-09, docs/design/23_llm_build_plan.md) and the map layout 2 keys
   (`[biome.<key>.layout2]`, A-06; defaults equal today, nothing changes for the player).
 - Balance: candidate D-339 (Authority infantry ash resist 600; Rust Belt ocean edge, no river) is on branch `bal-s47`, waiting for its 512-game decide; nothing to play-check on main yet. Layout 2: unchanged in play (new data keys only).
+
+## Session 48 (2026-11-27/28)
+Back up nothing: no save or replay format changed (save 16, replay 16).
+- **Balance f1 (D-340, landed):** Rust Belt skirmish: the map has deep water along all four edges (every game, not only with the Expedition)
+  and no river; the road grid is unchanged. Authority Riflemen, Rocketeers, Marksmen and Engineers take less damage on ash (ash resist 60 %,
+  shown as "Ash resist 60%" on their Field Manual pages).
+- **Field Manual (rebuilt):** Part IV Rust Belt page shows the sea edge and no river; Authority infantry pages show "Ash resist 60%"; the
+  Quick Reference hotkeys list "Alt+Enter Toggle fullscreen". `python tools/booklet/data/resolve_rules.py --strict` prints "0 loader problems".
+- **Upgrades in missions (Q-94):** in any campaign mission with a Barracks or factory the Research list still shows every upgrade it showed
+  before (nothing is locked yet); skirmish research is unchanged. The reward upgrades are locked only when their act-2..4 missions are built.
+- **Campaign wave 1 (C-12, act 1 of all four campaigns, play positions 2 and 3):** new orders
+  Authority auth_01, auth_05, auth_06, auth_02, auth_07, auth_03, auth_04; Directorate dir_01, dir_05, dir_06, dir_02, dir_03, dir_04;
+  Left Behind lb_01, lb_05, lb_06, lb_02, lb_03, lb_04; Expedition exp_01, exp_05, exp_06, exp_02, exp_03, exp_04.
+  Unit counts and timers are first guesses; pars come from the bot sweep sw48b (bot time x 2.5). For each: play once at tier 3, check the briefing reads like the
+  built missions, the objectives and timer appear, the win fires, and say if it is too easy or too hard.
+  1. **auth_05 "Hatch Country"** (rustbelt_m2, no base): "Close the three surface hatches" and "Pull down the loudspeaker pole" (a mast at the
+     north) before the "Name read out" timer (8 min). A patrol comes from the north after the first hatch. Win unlocks Engineer and Rocketeer.
+  2. **auth_06 "The Mill Town"** (new map rustbelt_mill, base): build a factory and ration hall, tanks; "Destroy the four hatches under the mill
+     town" and "Destroy the two reactor vents" before the "Grain train" timer. Two scrapers on the pitch spur (west) give a Pell line. Hidden
+     bonus: keep the grain elevator (north-east of the town) standing.
+  3. **dir_05 "Night Shift"** (rustbelt_m2, no base): "Destroy the three Authority power plants" then "Bring the shift back to the hatch before
+     dawn" (Dawn timer 4.5 min). Bonus: both sappers alive.
+  4. **dir_06 "The Assembly Bore"** (rustbelt_mill, base): raise a smelter vent on the scrap field (the cistern, bunk gallery and bore then appear
+     in the build list), then clear the Authority survey camp east of the town before the "Survey column" timer. Dr. Lund speaks for the first time.
+  5. **lb_05 "Under One Banner"** (rustbelt_m2, base): break the Two Fires hold's Dynamo and Muster Rigs, then Nobody's Daughter's well; the
+     "Gathering moves on" timer is the deadline. New Archive entry "Marrow Tindall" (the Speaker) unlocks on the win. Bonus: a Tinker takes the
+     well's Mother Rig below half health.
+  6. **lb_06 "Salvage Rights"** (rustbelt_mill, no base): "Shoot open all eight cars of the train" and "Bank 1200 ash at the Yard" before the
+     recovery crews arrive. Known problem: haulers also harvest the ash fields, so the bank goal is easy (the bot wins in about 45 s); tell me
+     what the mission should ask instead (see HANDOFF).
+  7. **exp_05 "The South Coast"** (new map tern_point, no base): marines clear the relief-ship wreck on the sandbar, then the Survey Hover takes
+     the log out to the open sea before the tide timer. Probably too easy (the bot wins tier 5 without losses).
+  8. **exp_06 "Dredge Rights"** (tern_point, base): deploy the Command Ship on the south beach, raise a Dredge Works and two Skimmers on the
+     shallow ash, then break the Authority battery east of the beach. Prototype Glide Tanks arrive by sea when the works stand.
+- **New maps:** skirmish map list or map editor: "The Mill Town" (rail across the middle, ruined town north of it, wrecked train east of it,
+  homes in two corners) and "Tern Point" (sea and beach in the south-west, railhead and platform in the south-east).
+- **Net tests (T-12):** nothing to check: the test fix failed on Windows CI and was reverted; T-12 stays open.
