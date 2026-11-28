@@ -23,9 +23,9 @@ function OnInit()
   Player.KeepAlive(1, true)
   AI.SetTier(1, Mission.Difficulty())
   AI.Defend(1, "enemy_base")
-  Actor.CreateGroup(Riflemen(Pick({ 1, 1, 1, 2, 3 })), 1, { x = 27, y = 14 })
+  Actor.CreateGroup(Riflemen(Pick({ 1, 1, 1, 2, 2 })), 1, { x = 27, y = 14 })
   Actor.CreateGroup(Riflemen(Pick({ 1, 1, 2, 2, 3 })), 1, { x = 33, y = 7 })
-  Actor.CreateGroup(Riflemen(Pick({ 1, 1, 2, 3, 4 })), 1, { x = 42, y = 12 })
+  Actor.CreateGroup(Riflemen(Pick({ 1, 1, 2, 2, 3 })), 1, { x = 42, y = 12 })
 
   for _, tag in ipairs(PLANTS) do Trigger.OnDestroyed(tag, PlantDown) end
   Mission.Timer("dawn", 5400, DawnBreaks, "d5.timer.dawn")
@@ -54,7 +54,7 @@ function PlantDown()
   end
   if state.down == 1 then
     Dialogue.Say(SPEAKER, SPEAKER, "d5.radio.plant1")
-    local types = Riflemen(Pick({ 0, 1, 2, 3, 5 }))
+    local types = Riflemen(Pick({ 0, 1, 2, 2, 3 }))
     if #types > 0 then
       Media.MessageKey("d5.alarm1")
       Dialogue.Say(SPEAKER, SPEAKER, "d5.radio.alarm1")
@@ -62,9 +62,9 @@ function PlantDown()
     end
   elseif state.down == 2 then
     Dialogue.Say(SPEAKER, SPEAKER, "d5.radio.plant2")
-    local types = Riflemen(Pick({ 0, 0, 1, 2, 4 }))
+    local types = Riflemen(Pick({ 0, 0, 1, 1, 2 }))
     if #types > 0 then
-      if Mission.Difficulty() >= 4 then types[#types + 1] = "auth_jeep" end
+      -- S48 sweep: no jeep at any tier (tiers 4-5 lost 12/12 with it and the larger counts; the shift is 10 soldiers) (tune)
       Media.MessageKey("d5.alarm2")
       Dialogue.Say(SPEAKER, SPEAKER, "d5.radio.alarm2")
       Reinforce.Edge(1, types, { x = 63, y = 14 + Random.Next(5) }, Map.Center("hatch"))

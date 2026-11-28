@@ -11,7 +11,7 @@ seed = 2027
 schema = 2
 act = 1
 # D-289: bot tier-3 median win x 2.5.
-par_seconds = 300  # PENDING par from sweep
+par_seconds = 300   # S48 sweep sw48b (D-289): tier-3 median win 1941 ticks x 2.5, rounded up to a minute
 faction = "directorate"
 # dir_06 (The Assembly Bore) joins later between dir_05 and dir_02 (design 22); until it is built the next mission is dir_02.
 next = "dir_06"

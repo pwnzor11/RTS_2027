@@ -42,7 +42,7 @@ public sealed class S48Lb05Tests
         Assert.Equal("left_behind", m.Def.Faction);
         Assert.Equal(1, m.Def.Act);
         Assert.Equal("lb_06", m.Def.Next[0]);
-        Assert.Equal(900, m.Def.ParSeconds);   // placeholder until the sweep has measured it (D-289)
+        Assert.Equal(360, m.Def.ParSeconds);   // S48 sweep sw48b (D-289)
         Assert.Equal(new[] { "lb_buggy", "lb_gleaner" }, m.Def.UnlocksOnWin);
 
         string toml = File.ReadAllText(Path.Combine(TestData.DataDir, "campaigns", "left_behind.toml"));
