@@ -451,8 +451,13 @@ public sealed partial class Simulation
             var kind = (ActorKind)k;
             SlotArray slots = SlotsOf(kind);
             int cap = slots.Capacity;
-            for (int i = 1; i < cap; i++)
+            // M-28b: mobile kinds visit only the slots near the impact (live positions, ascending slot order = the order of the full walk);
+            // nothing in this loop moves, spawns or frees an actor (Hurt only queues the hit), so the candidate list cannot go stale inside it.
+            bool indexed = TryLiveCandidates(kind, ic, radius, out ReadOnlySpan<int> cand);
+            int visits = indexed ? cand.Length : cap - 1;
+            for (int c = 0; c < visits; c++)
             {
+                int i = indexed ? cand[c] : c + 1;
                 if (!slots.IsIndexAlive(i) || HealthAt(kind, i) <= 0) continue;
                 if (kind != ActorKind.Building)
                 {

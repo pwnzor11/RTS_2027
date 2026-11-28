@@ -36,8 +36,12 @@ public sealed partial class Simulation
     /// <summary>True if a ship or building of the viewer's team with a sonar radius covers <paramref name="cell"/> (Chebyshev, like the Seismograph).</summary>
     internal bool IsSonarRevealed(byte viewer, CellCoord cell)
     {
-        for (int i = 1; i < _units.Capacity; i++)
+        // M-28b: only vehicles within the largest sonar radius of the cell can answer yes (the result is a yes/no, so the visit order is free).
+        bool indexed = TryLiveCandidates(ActorKind.Vehicle, cell, MaxVehicleSonarRadius(), out ReadOnlySpan<int> cand);
+        int visits = indexed ? cand.Length : _units.Capacity - 1;
+        for (int c = 0; c < visits; c++)
         {
+            int i = indexed ? cand[c] : c + 1;
             if (!_units.Slots.IsIndexAlive(i) || _units.Health[i] <= 0 || !IsFriendly(viewer, _units.Player[i])) continue;
             int rad = RulesOf(_units.Player[i]).Vehicles[_units.TypeIndex[i]].SonarRadius;   // assumed — confirm (M7-05): only vehicles carry sonar
             if (rad > 0 && LeptonMath.ChebyshevCells(cell, _units.Position[i].ToCell()) <= rad) return true;
